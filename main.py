@@ -101,22 +101,36 @@ class Api:
         r = requests.post('https://www.predictit.org/api/Account/token', login_info)
         self.token = r.json()['access_token']
         self.data = requests.get('https://www.predictit.org/api/marketdata/all').json()
-        self.watch = {}
+        self.watch = []
+        self.messages = []
         run_thread = threading.Thread(target=self.run, daemon=True)
         run_thread.start()
 
+    def log_alert(self, user, market, bin, value):
+        self.watch.append({'user': user, 'market': market, 'bin': bin, 'value': value})
+        print(self.watch)
+
+    def get_messages(self):
+        return self.messages
+
     def check_alerts(self):
-        watched_markets = self.watch.keys()
-        for market in self.data['markets']:
-            market_id = str(market['id'])
-            if market_id in watched_markets:
-                contract = market['contracts'][self.watch[market_id]['bin']]
-                if self.watch[market_id]['drop']:
-                    if contract['bestBuyYesCost'] <= self.watch[market_id]['value']:
-                        self.client.fetch_user(324063771339259904).send('Test')
-                else:
-                    if contract['bestBuyYesCost'] >= self.watch[market_id]['value']:
-                        pass #dm
+        for i, wat in enumerate(self.watch):
+            for market in self.data['markets']:
+                market_id = str(market['id'])
+                if market_id == str(wat['market']):
+                    contract = market['contracts'][wat['bin']]
+                    if wat['value'] < 0:
+                        if contract['bestBuyYesCost'] * 100 <= abs(wat['value']):
+                            msg = wat['user'] + " Market " + market_id + " just dropped below " + str(-wat['value']) + '\n'
+                            msg += "Currently at " + str(int(contract['bestBuyYesCost'] * 100)) + '¢'
+                            self.messages += [msg]
+                            self.watch.pop(i)
+                    else:
+                        if contract['bestBuyYesCost'] * 100 >= wat['value']:
+                            msg = wat['user'] + " Market " + market_id + " just went above " + str(wat['value']) + '\n'
+                            msg += "Currently at " + str(int(contract['bestBuyYesCost']*100)) + '¢'
+                            self.messages += [msg]
+                            self.watch.pop(i)
 
     def run(self):
         while True:
@@ -240,7 +254,7 @@ class Api:
         bins = self.get_all_offers(market)
         return sum_prices(self.get_all_short(bins))
 
-    def optimize_all(self, max_shares=850, minimum=True):
+    def optimize_all(self, max_shares=850, minimum=True, compressed=True):
         msg = "There are {} markets with negative risk.\n"
         n = 0
         for market in self.data['markets']:
@@ -257,9 +271,12 @@ class Api:
                 market_id = market['id']
                 if profit > 0:
                     n += 1
-                    msg += "Market " + str(market_id) + '\n'
-                    msg += "   Sum of 1 minus no is " + str(potential) + "\n"
-                    msg += "   Potential profit is $" + str(profit) + " with the ideal spread\n"
+                    if not compressed:
+                        msg += "Market " + str(market_id) + '\n'
+                        msg += "   Sum of 1 minus no is " + str(potential) + "\n"
+                        msg += "   Potential profit is $" + str(profit) + " with the ideal spread\n"
+                    else:
+                        msg += "Market " + str(market_id) + ' (' + str(potential) + ' / $' + str(profit) + ')\n'
         return msg.format(str(n))
 
     def opt_neg_risk(self, market, max_shares, minimum):
@@ -418,14 +435,13 @@ class Api:
         for market in self.data['markets']:
             for contract in market['contracts']:
                 if all([bin_name in contract['name'].lower() for bin_name in bin_name_words]):
-                    if (10 * m) > n >= (10 * (m - 1)):
-                        msg += market['shortName'] + ' (' + str(market['id']) + ')\n'
-                        msg += "   " + contract['name'] + " last traded at " + str(int(contract['lastTradePrice']*100)) + '¢\n'
+                    if (20 * m) > n >= (20 * (m - 1)):
+                        msg += market['shortName'] + ' (' + str(market['id']) + ') ' + str(int(contract['lastTradePrice']*100)) + '¢\n'
                     n += 1
         if n == 0:
             msg += "No markets found!"
-        elif n >= 10 * m:
-            msg += "Only displaying the first ten markets, to get ten more, run 'm " + bin_name + "+" * m + ' bin'
+        elif n >= 20 * m:
+            msg += "Only displaying the first twenty markets, to get twenty more, run '. " + bin_name + "+" * m + ' bin'
         return msg
 
     def get_related_markets(self, name_frag):
@@ -440,11 +456,11 @@ class Api:
         name_frag_words = name_frag.split()
         for market in self.data['markets']:
             if all([name_frag in market['name'].lower() or name_frag in market['shortName'].lower() for name_frag in name_frag_words]):
-                if (10 * m) > n >= (10 * (m - 1)):
+                if (20 * m) > n >= (20 * (m - 1)):
                     msg += market['shortName'] + ' (' + str(market['id']) + ')\n'
                 n += 1
         if n == 0:
             msg += "No markets found!"
-        elif n >= 10 * m:
-            msg += "Only displaying the first ten markets, to get ten more, run 'm " + name_frag + "+" * m
+        elif n >= 20 * m:
+            msg += "Only displaying the first twenty markets, to get twenty more, run '- " + name_frag + "+" * m
         return msg

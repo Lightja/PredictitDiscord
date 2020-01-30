@@ -1,3 +1,4 @@
+import asyncio
 import main
 import auths
 import discord
@@ -12,17 +13,14 @@ client = discord.Client()
 async def on_message(message):
     if message.author == client.user:
         pass
-    elif message.content.startswith("'Hello") or message.content.startswith("'hello") or \
-         message.content.startswith(",Hello") or message.content.startswith(",hello"):
+    elif message.content.startswith(",Hello") or message.content.startswith(",hello"):
         print(message.channel)
         await message.channel.send('Hello')
-    elif message.content.startswith("'murder") or message.content.startswith("'kill") or \
-         message.content.startswith(",murder") or message.content.startswith(",kill"):
+    elif message.content.startswith(",murder") or message.content.startswith(",kill"):
         msg = "oh no you have killed me\n"
         msg += "I am ded"
         await message.channel.send(msg)
-    elif message.content.startswith("'Risk") or message.content.startswith("'risk") or message.content.startswith("'r ") or \
-         message.content.startswith(",Risk") or message.content.startswith(",risk") or message.content.startswith(",r "):
+    elif message.content.startswith(",Risk") or message.content.startswith(",risk") or message.content.startswith(",r "):
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -51,8 +49,7 @@ async def on_message(message):
             embed = discord.Embed(title=title, url=url,
                                   description=info)
             await message.channel.send(embed=embed)
-    elif message.content.startswith("'Bins") or message.content.startswith("'bins") or message.content.startswith("'b ") or \
-         message.content.startswith(",Bins") or message.content.startswith(",bins") or message.content.startswith(",b "):
+    elif message.content.startswith(",Bins") or message.content.startswith(",bins") or message.content.startswith(",b "):
         argument = message.content.split(' ')
         market = argument[1:]
         whole = ""
@@ -65,30 +62,7 @@ async def on_message(message):
         print("Bins")
         print(market, message.author)
         await message.channel.send(embed=embed)
-    elif message.content.startswith("'Help") or message.content.startswith("'help") or message.content.startswith("'h ") or \
-         message.content.startswith(",Help") or message.content.startswith(",help") or message.content.startswith(",h "):
-        msg = ""
-        msg += "Hello, I am a helpful PredictIt bot\n"
-        msg += "I can perform various helpful tasks. Just say a command then either the market id or part of the market's name\n"
-        msg += "Here are the commands I can perform:\n"
-        msg += "  ,help or ,h brings up this message.\n"
-        msg += "  ,risk or ,r can be used to figure out whether a market has negative risk or not. The keyword 'all' searches all the markets.\n"
-        msg += "  ,bins or ,b can be used to show the prices for each bin in a market.\n"
-        msg += "  ,value or ,v can be used to compare the cost of buying Yes and buying no on everything else.\n"
-        msg += "  ,market or ,m can be used to get all the markets that contain the input in the title.\n"
-        msg += "  ,- can be used to get all the markets that contain the input in the title.\n"
-        msg += "  ,. can be used to get all the markets that contain the input in the one of the bins.\n"
-        msg += "  ,o can be used to get the volume of the contracts in a specific market.\n"
-        msg += "  ,rcp can be used get the current rcp averages for the nation or individual states.\n"
-        msg += "This bot took a while to make, and as a broke college student, I'd really appreciate a donation if you make any money off predictit...\n"
-        msg += "   Bitcoin: bc1qxmm7l2vhema687hrvle3yyp04h6svzy8tkk8sg\n"
-        msg += "   PayPay, Venmo, etc: PM @crazycrabman#2555\n"
-        msg += "The bot is running on AWS, so it should be online 24/7. If it isn't, you have an idea for another command, or just want to chat about this bot, PM @crazycrabman#2555\n"
-        print("Help")
-        print(message.author)
-        await message.channel.send(msg)
-    elif message.content.startswith("'v ") or message.content.startswith("'value") or message.content.startswith("'Value") or \
-         message.content.startswith(",v ") or message.content.startswith(",value") or message.content.startswith(",Value"):
+    elif message.content.startswith(",v ") or message.content.startswith(",value") or message.content.startswith(",Value"):
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -108,8 +82,7 @@ async def on_message(message):
         print("Value")
         print(market, bin, message.author)
         await message.channel.send(msg)
-    elif message.content.startswith("'m ") or message.content.startswith("'market") or message.content.startswith("'Market") or \
-         message.content.startswith(",m ") or message.content.startswith(",market") or message.content.startswith(",Market"):
+    elif message.content.startswith(",m ") or message.content.startswith(",market") or message.content.startswith(",Market"):
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -124,7 +97,7 @@ async def on_message(message):
         print("bins")
         print(keyword, message.author)
         await message.channel.send(msg)
-    elif message.content.startswith("'. ") or message.content.startswith(",. "):
+    elif message.content.startswith(",. "):
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -135,7 +108,7 @@ async def on_message(message):
         print("Similar")
         print(keyword, message.author)
         await message.channel.send(msg)
-    elif message.content.startswith("'- ") or message.content.startswith(",- "):
+    elif message.content.startswith(",- "):
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -146,7 +119,7 @@ async def on_message(message):
         print("Similar")
         print(keyword, message.author)
         await message.channel.send(msg)
-    elif message.content.startswith("'o ") or message.content.startswith(",o "):
+    elif message.content.startswith(",o "):
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -159,7 +132,7 @@ async def on_message(message):
         print("Offers")
         print(keyword, message.author)
         await message.channel.send(embed=embed)
-    elif message.content.startswith("'rcp") or message.content.startswith(",rcp"):
+    elif message.content.startswith(",rcp") or message.content.startswith(",RCP") or message.content.startswith(",p"):
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -204,7 +177,44 @@ async def on_message(message):
         print("RCP")
         print(keyword, message.author)
         await message.channel.send(msg)
-
+    elif message.content.startswith(",alert") or message.content.startswith(",a"):
+        argument = message.content.split(' ')
+        keywords = argument[1:]
+        value = int(keywords.pop(-1))
+        bin = int(keywords.pop(-1)) - 1
+        market = int(keywords.pop(-1))
+        if len(keywords) > 0:
+            await message.channel.send('Expected 3 arguments')
+        print(message.author)
+        user = '<@' + str(message.author.id) + '>'
+        api.log_alert(user, market, bin, value)
+        msg = "Setting alert for market " + str(market) + "\n"
+        if value > 0:
+            msg += "This alert will trigger when B" + str(bin + 1) + " goes above " + str(value) + '¢'
+        else:
+            msg += "This alert will trigger when B" + str(bin + 1) + " goes below " + str(-value) + '¢'
+        await message.channel.send(msg)
+    elif message.content.startswith(",Help") or message.content.startswith(",help") or message.content.startswith(",h"):
+        msg = ""
+        msg += "Hello, I am a helpful PredictIt bot\n"
+        msg += "I can perform various helpful tasks. Just say a command then either the market id or part of the market's name\n"
+        msg += "Here are the commands I can perform:\n"
+        msg += "   ,help or ,h brings up this message.\n"
+        msg += "   ,risk or ,r can be used to figure out whether a market has negative risk or not. The keyword 'all' searches all the markets.\n"
+        msg += "   ,bins or ,b can be used to show the prices for each bin in a market.\n"
+        msg += "   ,value or ,v can be used to compare the cost of buying Yes and buying no on everything else.\n"
+        msg += "   ,market or ,m can be used to get all the markets that contain the input in the title.\n"
+        msg += "   ,- can be used to get all the markets that contain the input in the title.\n"
+        msg += "   ,. can be used to get all the markets that contain the input in the one of the bins.\n"
+        msg += "   ,o can be used to get the volume of the contracts in a specific market.\n"
+        msg += "   ,rcp or ,p can be used get the current rcp averages for the nation or individual states.\n"
+        msg += "This bot took a while to make, and as a broke college student, I'd really appreciate a donation if you make any money off predictit...\n"
+        msg += "    Bitcoin: bc1qxmm7l2vhema687hrvle3yyp04h6svzy8tkk8sg\n"
+        msg += "    PayPay, Venmo, etc: PM @crazycrabman#2555\n"
+        msg += "The bot is running on AWS, so it should be online 24/7. If it isn't, you have an idea for another command, or just want to chat about this bot, PM @crazycrabman#2555\n"
+        print("Help")
+        print(message.author)
+        await message.channel.send(msg)
 
 
 @client.event
@@ -215,4 +225,18 @@ async def on_ready():
     print('------')
 
 
+async def my_background_task():
+    await client.wait_until_ready()
+    print('starting')
+    while client.is_ready():
+        messages = api.get_messages()
+        for i, message in enumerate(messages):
+            if message:
+                await client.get_channel(671281289105768449).send(message)
+                messages[i] = None
+        api.messages = [message for message in messages if message is not None]
+        await asyncio.sleep(30)
+
+
+client.loop.create_task(my_background_task())
 client.run(auths.discord_token)
