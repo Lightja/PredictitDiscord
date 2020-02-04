@@ -255,8 +255,9 @@ class Api:
         return sum_prices(self.get_all_short(bins))
 
     def optimize_all(self, max_shares=850, minimum=True, compressed=True):
-        msg = "There are {} markets with negative risk.\n"
+        title = "There are {} markets with negative risk.\n"
         n = 0
+        msg = '```'
         for market in self.data['markets']:
             if len(market['contracts']) > 1:
                 short = []
@@ -277,7 +278,8 @@ class Api:
                         msg += "   Potential profit is $" + str(profit) + " with the ideal spread\n"
                     else:
                         msg += "Market " + str(market_id) + ' (' + str(potential) + ' / $' + str(profit) + ')\n'
-        return msg.format(str(n))
+        msg += '```'
+        return title.format(str(n)), msg
 
     def opt_neg_risk(self, market, max_shares, minimum):
         assert max_shares > 0, 'Max shares must be positive'
