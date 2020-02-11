@@ -8,6 +8,7 @@ import yfinance as yf
 
 api = main.Api()
 client = discord.Client()
+stats = {'users': {}, 'commands': {}}
 
 
 @client.event
@@ -22,7 +23,8 @@ async def on_message(message):
         msg = "oh no you have killed me\n"
         msg += "I am ded"
         await message.channel.send(msg)
-    elif message.content.startswith(",vote") or message.content.startswith(",hack") or message.content.startswith(",rig"):
+    elif message.content.startswith(",vote") or message.content.startswith(",hack") or message.content.startswith(
+            ",rig"):
         await message.channel.send("Can't do that unfortunately, I'm not Russian")
     elif message.content.startswith("!burn") or message.content.startswith(",burn"):
         await message.channel.send("No U")
@@ -31,7 +33,10 @@ async def on_message(message):
         msg += "    Bitcoin: \n    bc1qxmm7l2vhema687hrvle3yyp04h6svzy8tkk8sg\n"
         msg += "    PayPay, Venmo, etc: \n    PM @crazycrabman#2555\n"
         await message.channel.send(msg)
-    elif message.content.startswith(",Risk") or message.content.startswith(",risk") or message.content.startswith(",r "):
+    elif message.content.startswith(",Risk") or message.content.startswith(",risk") or message.content.startswith(
+            ",r "):
+        stats['commands']['risk'] = stats['commands'].get('risk', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -63,6 +68,8 @@ async def on_message(message):
             await message.channel.send(embed=embed)
     elif message.content.startswith(",Bins") or message.content.startswith(",bins") or message.content.startswith(
             ",b "):
+        stats['commands']['bins'] = stats['commands'].get('bins', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         market = argument[1:]
         whole = ""
@@ -77,6 +84,8 @@ async def on_message(message):
         await message.channel.send(embed=embed)
     elif message.content.startswith(",v ") or message.content.startswith(",value") or message.content.startswith(
             ",Value"):
+        stats['commands']['rcp'] = stats['commands'].get('rcp', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -97,6 +106,8 @@ async def on_message(message):
         print(market, bin, message.author)
         await message.channel.send(msg)
     elif message.content.startswith(",. "):
+        stats['commands']['search_bins'] = stats['commands'].get('search_bins', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -108,6 +119,8 @@ async def on_message(message):
         print(keyword, message.author)
         await message.channel.send(msg)
     elif message.content.startswith(",- "):
+        stats['commands']['search_titles'] = stats['commands'].get('search_titles', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -119,6 +132,8 @@ async def on_message(message):
         print(keyword, message.author)
         await message.channel.send(msg)
     elif message.content.startswith(",o "):
+        stats['commands']['orderbook'] = stats['commands'].get('orderbook', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -132,6 +147,8 @@ async def on_message(message):
         print(keyword, message.author)
         await message.channel.send(embed=embed)
     elif message.content.startswith(",rcp") or message.content.startswith(",RCP") or message.content.startswith(",p"):
+        stats['commands']['rcp'] = stats['commands'].get('rcp', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -178,6 +195,7 @@ async def on_message(message):
         embed = discord.Embed(title=title, description=msg, color=2206669)
         await message.channel.send(embed=embed)
     elif message.content.startswith(",alert") or message.content.startswith(",a"):
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         keywords = argument[1:]
         value = int(keywords.pop(-1))
@@ -194,7 +212,9 @@ async def on_message(message):
         else:
             msg += "This alert will trigger when B" + str(bin + 1) + " goes below " + str(-value) + '¢'
         await message.channel.send(msg)
-    elif message.content.startswith(",stock") or message.content.startswith(",s"):
+    elif message.content.startswith(",stock") or message.content.startswith(",s "):
+        stats['commands']['stocks'] = stats['commands'].get('stocks', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
         market = argument[1:]
         whole = ""
@@ -207,6 +227,8 @@ async def on_message(message):
         except IndexError:
             await message.channel.send(market + " not found")
     elif message.content.startswith(",Help") or message.content.startswith(",help") or message.content.startswith(",h"):
+        stats['commands']['help'] = stats['commands'].get('help', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         title = "Here are the commands I can perform:\n"
         msg = ",help or ,h brings up this message.\n"
         msg += ",risk or ,r figures out whether a market has negative risk or not. The keyword 'all' searches all the markets.\n"
@@ -217,8 +239,9 @@ async def on_message(message):
         msg += ",o gets the volume of the contracts in a specific market.\n"
         msg += ",rcp or ,p gets the current rcp averages for the nation or individual states.\n"
         msg += ",stock or ,s gets the last traded price of the indicated ticker. \n"
+        msg += ",i or ,implied gets the implied odds of each candidate winning the presidency (% pres / % nom). \n"
         msg += "\n"
-        msg += "This bot took a while to make, and as a broke college student, I'd really appreciate a donation if you make any money off predictit...\n"
+        msg += "This bot took a while to make, and as a broke college student, I'd really appreciate a donation if like the bot or find it useful.\n"
         msg += "    Bitcoin: \n    bc1qxmm7l2vhema687hrvle3yyp04h6svzy8tkk8sg\n"
         msg += "    PayPay, Venmo, etc: \n    PM @crazycrabman#2555\n"
         msg += "The bot is running on AWS, so it should be online 24/7. If it isn't, you have an idea for another command, or just want to chat about this bot, PM @crazycrabman#2555\n"
@@ -226,22 +249,28 @@ async def on_message(message):
         print(message.author)
         embed = discord.Embed(title=title, description=msg, color=2206669)
         await message.channel.send(embed=embed)
-    elif message.content.startswith(",dmr") or message.content.startswith(",d"):
-        print(message)
-        results = requests.get(
-            "https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/newresults.json").json()
-        race_0 = results['races'][3]['reportingUnits'][0]['candidates']
-        title = "DMR Iowa Results"
-        msg = ""
-        for result in race_0:
-            try:
-                msg += result['last'] + " - " + str(result['voteCount']) + '\n'
-            except KeyError:
-                pass
-        print("DRM Update")
-        embed = discord.Embed(title=title, description=msg, color=2206669,
-                              url="https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/")
+    elif message.content.startswith(",i") or message.content.startswith(",implied"):
+        stats['commands']['implied'] = stats['commands'].get('implied', 0) + 1
+        stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        msg = api.divide_bins(3698, 3633)
+        embed = discord.Embed(title="Implied dem presidential victory odds", description=msg, color=2206669)
         await message.channel.send(embed=embed)
+    elif message.content.startswith(",stats"):
+        msg = ""
+        for user, num in stats['users'].items():
+            msg += user.name + ": " + str(num) + '\n'
+        embed = discord.Embed(title="user stats", description=msg, color=2206669)
+        await message.channel.send(embed=embed)
+        msg = ""
+        for command, num in stats['commands'].items():
+            msg += command + ": " + str(num) + '\n'
+        embed = discord.Embed(title="command stats", description=msg, color=2206669)
+        await message.channel.send(embed=embed)
+    elif message.content.startswith(",nh"):
+        msg = ""
+        response = requests.get(
+            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+        print(response)
 
 
 @client.event
@@ -267,31 +296,40 @@ async def my_background_task():
 
 async def poll_check():
     await client.wait_until_ready()
-    old = {"Bernie": 1804, "Elizabeth": 1633, "Pete": 1553, "Amy": 771, "Joe": 722}
+    old = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+    results = requests.get(
+        "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
+    candidate_results = results['data']['races'][0]['candidates']
+    # for candidate in candidate_results:
+    #     try:
+    #         old[candidate['last_name']] += candidate['votes']
+    #     except KeyError:
+    #         pass
+    print(old)
     while client.is_ready():
-        results = requests.get("https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/newresults.json").json()
-        race_0 = results['races'][3]['reportingUnits'][0]['candidates']
         changed = False
-        for result in race_0:
+        results = requests.get(
+            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
+        candidate_results = results['data']['races'][0]['candidates']
+        for candidate in candidate_results:
             try:
-                num = old[result['first']]
-                if num != result['voteCount']:
+                if candidate['votes'] != old[candidate['last_name']]:
                     changed = True
-                old[result['first']] = result['voteCount']
+                    old[candidate['last_name']] = candidate['votes']
             except KeyError:
                 pass
+        print(old)
         if changed:
-            title = "DMR Results Changed"
+            title = "NH Results Changed"
             msg = ""
-            for result in race_0:
-                try:
-                    msg += result['last'] + " - " + str(result['voteCount']) + '\n'
-                except KeyError:
-                    pass
-            print("DRM Update")
-            embed = discord.Embed(title=title, description=msg, color=2206669, url="https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/")
-            await client.get_channel(670891620996218900).send(embed=embed)
+            for candidate, num in old.items():
+                msg += candidate + ": " + str(num) + "\n"
+            print("NH Update")
+            embed = discord.Embed(title=title, description=msg, color=2206669,
+                                  url="https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/")
+            await client.get_channel(671281289105768449).send(embed=embed)
         await asyncio.sleep(5)
+
 
 client.loop.create_task(my_background_task())
 client.loop.create_task(poll_check())

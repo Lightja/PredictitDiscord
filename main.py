@@ -81,7 +81,9 @@ def best_amount(prices: list, max_shares: int, test) -> list:
 
 def optimize_spread(prices: list, max_shares: int, minimum: bool = True, test=False) -> tuple:
     maximum = max_shares
-    while True:
+    max_profit = 0
+    max_spread = []
+    while maximum > 0:
         spread = []
         for i in best_amount(prices, maximum, test):
             if i[0] != 1:
@@ -89,9 +91,15 @@ def optimize_spread(prices: list, max_shares: int, minimum: bool = True, test=Fa
             else:
                 spread.append(0)
         maximum -= 1
-        if max(spread) <= max_shares or not minimum:
+        if not minimum:
+            max_spread = spread
+            max_profit = calc_profit(spread, prices)
             break
-    return spread, calc_profit(spread, prices)
+        elif max(spread) <= max_shares:
+            if calc_profit(spread, prices) > max_profit:
+                max_spread = spread
+                max_profit = calc_profit(spread, prices)
+    return max_spread, max_profit
 
 
 class Api:
@@ -121,14 +129,15 @@ class Api:
                     contract = market['contracts'][wat['bin']]
                     if wat['value'] < 0:
                         if contract['bestBuyYesCost'] * 100 <= abs(wat['value']):
-                            msg = wat['user'] + " Market " + market_id + " just dropped below " + str(-wat['value']) + '\n'
+                            msg = wat['user'] + " Market " + market_id + " just dropped below " + str(
+                                -wat['value']) + '\n'
                             msg += "Currently at " + str(int(contract['bestBuyYesCost'] * 100)) + '¢'
                             self.messages += [msg]
                             self.watch.pop(i)
                     else:
                         if contract['bestBuyYesCost'] * 100 >= wat['value']:
                             msg = wat['user'] + " Market " + market_id + " just went above " + str(wat['value']) + '\n'
-                            msg += "Currently at " + str(int(contract['bestBuyYesCost']*100)) + '¢'
+                            msg += "Currently at " + str(int(contract['bestBuyYesCost'] * 100)) + '¢'
                             self.messages += [msg]
                             self.watch.pop(i)
 
@@ -152,7 +161,8 @@ class Api:
         self.token = r.json()['access_token']
 
     def get_orderbook(self, id):
-        return requests.get('https://www.predictit.org/api/Trade/' + str(id) + '/OrderBook', headers={'Authorization': 'Bearer ' + self.token}).json()
+        return requests.get('https://www.predictit.org/api/Trade/' + str(id) + '/OrderBook',
+                            headers={'Authorization': 'Bearer ' + self.token}).json()
 
     def get_market_name(self, id):
         id = str(id)
@@ -192,8 +202,12 @@ class Api:
     def get_contract_offers(self, id, top=False):
         book = self.get_orderbook(id)
         offers = {'yes': {}, 'no': {}}
-        yes_orders = book['yesOrders']
-        no_orders = book['noOrders']
+        try:
+            yes_orders = book['yesOrders']
+            no_orders = book['noOrders']
+        except KeyError:
+            self.get_auth()
+            return self.get_contract_offers(id, top)
         if not top:
             for order in yes_orders:
                 offers['yes'][order['pricePerShare']] = order['quantity']
@@ -254,7 +268,7 @@ class Api:
         bins = self.get_all_offers(market)
         return sum_prices(self.get_all_short(bins))
 
-    def optimize_all(self, max_shares=850, minimum=True, compressed=True):
+    def optimize_all(self, max_shares=850, minimum=False, compressed=True):
         title = "There are {} markets with negative risk.\n"
         n = 0
         msg = '```'
@@ -312,18 +326,17 @@ class Api:
                 max_len = len(name)
         msg = ''
         msg += '```'
-        msg += ' ' * (max_len + 2) + 'YES  VOLUME  NO  VOLUME\n'
-        print(offers)
+        msg += ' ' * (max_len + 2) + 'YES  OFFERS  NO  OFFERS\n'
         for name, book in offers.items():
             yes = book['yes']
-            print(yes)
             no = book['no']
-            print(no)
             msg += ' ' * (max_len - len(name)) + str(name)
             longest = max(len(yes), len(no))
             for i in range(longest):
-                msg += '  ' + str(int(yes[i][0]*100)) + (' ' * (3 - len(str(int(yes[i][0]*100))))) + '  ' + str(yes[i][1]) + ' ' * (6 - len(str(yes[i][1])))
-                msg += '  ' + str(int(no[i][0]*100)) + (' ' * (3 - len(str(int(no[i][0]*100))))) + '  ' + str(no[i][1]) + '\n'
+                msg += '  ' + str(int(yes[i][0] * 100)) + (' ' * (3 - len(str(int(yes[i][0] * 100))))) + '  ' + str(
+                    yes[i][1]) + ' ' * (6 - len(str(yes[i][1])))
+                msg += '  ' + str(int(no[i][0] * 100)) + (' ' * (3 - len(str(int(no[i][0] * 100))))) + '  ' + str(
+                    no[i][1]) + '\n'
         msg += '```'
         return title, msg, url
 
@@ -416,11 +429,8 @@ class Api:
         else:
             if bin == -1:
                 bin = long.index(max(long))
-            print(bin)
             info += "Buying B" + str(bin + 1) + " Yes costs " + str(int(long[bin] * 100)) + '¢\n'
             buys = [1 if i != bin and j != 1 else 0 for i, j in enumerate(short)]
-            print(short)
-            print(buys)
             info += "Buying No on everything else would cost " + str(int(calc_risk(buys, short, bin) * 100)) + '¢'
         return info
 
@@ -438,11 +448,12 @@ class Api:
             for contract in market['contracts']:
                 if all([bin_name in contract['name'].lower() for bin_name in bin_name_words]):
                     if (20 * m) > n >= (20 * (m - 1)):
-                        msg += market['shortName'] + ' (' + str(market['id']) + ') ' + str(int(contract['lastTradePrice']*100)) + '¢\n'
+                        msg += market['shortName'] + ' (' + str(market['id']) + ') ' + str(
+                            int(contract['lastTradePrice'] * 100)) + '¢\n'
                     n += 1
         if n == 0:
             msg += "No markets found!"
-        elif n >= 20 * m:
+        elif n >= 15 * m:
             msg += "Only displaying the first twenty markets, to get twenty more, run '. " + bin_name + "+" * m + ' bin'
         return msg
 
@@ -457,12 +468,38 @@ class Api:
         name_frag = name_frag.strip('+')
         name_frag_words = name_frag.split()
         for market in self.data['markets']:
-            if all([name_frag in market['name'].lower() or name_frag in market['shortName'].lower() for name_frag in name_frag_words]):
+            if all([name_frag in market['name'].lower() or name_frag in market['shortName'].lower() for name_frag in
+                    name_frag_words]):
                 if (20 * m) > n >= (20 * (m - 1)):
                     msg += market['shortName'] + ' (' + str(market['id']) + ')\n'
                 n += 1
         if n == 0:
             msg += "No markets found!"
-        elif n >= 20 * m:
+        elif n >= 15 * m:
             msg += "Only displaying the first twenty markets, to get twenty more, run '- " + name_frag + "+" * m
+        return msg
+
+    def get_prices(self, market_id):
+        prices = {}
+        for market in self.data["markets"]:
+            if str(market['id']) == str(market_id):
+                for contract in market['contracts']:
+                    prices[contract['shortName']] = {'yes': contract['bestBuyYesCost'], 'no': contract['bestBuyNoCost']}
+        return prices
+
+    def divide_bins(self, market1, market2):
+        self.reload()
+        market1_prices = self.get_prices(market1)
+        market2_prices = self.get_prices(market2)
+        divided_prices = {}
+        for name, prices in market1_prices.items():
+            try:
+                if prices['yes'] >= 0.02:
+                    divided_prices[name] = int(prices['yes'] / market2_prices[name]['yes'] * 100)
+            except KeyError:
+                pass
+        print('Getting Difference')
+        msg = ""
+        for name, div in divided_prices.items():
+            msg += name + ": " + str(div) + "%\n"
         return msg
