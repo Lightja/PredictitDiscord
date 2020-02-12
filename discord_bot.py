@@ -146,7 +146,7 @@ async def on_message(message):
         print("Offers")
         print(keyword, message.author)
         await message.channel.send(embed=embed)
-    elif message.content.startswith(",rcp") or message.content.startswith(",RCP") or message.content.startswith(",p"):
+    elif message.content.startswith(",rcp") or message.content.startswith(",RCP"):
         stats['commands']['rcp'] = stats['commands'].get('rcp', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
         argument = message.content.split(' ')
@@ -320,6 +320,62 @@ async def on_message(message):
                     embed = discord.Embed(title=title, description=msg, color=2206669,
                                           url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
                     await message.channel.send(embed=embed)
+    elif message.content.startswith(",ps") and str(message.author.id) == "324063771339259904":
+        argument = message.content.split(';')
+        try:
+            market = int(argument[1].strip())
+        except ValueError:
+            market = api.get_market_id(argument[1].strip())
+        bin = argument[2].strip()
+        num = argument[3].strip()
+        price = argument[4].strip()
+        long = False
+        print(market, bin, num, price, long)
+        made, name = api.make_trade_bin(market, bin, num, price, long)
+        if made:
+            msg = "Placed order for " + str(num) + " short of " + name + " @" + str(price) + "¢"
+        else:
+            msg = "Unable to place order"
+        await message.channel.send(msg)
+    elif message.content.startswith(",pl") and str(message.author.id) == "324063771339259904":
+        argument = message.content.split(';')
+        try:
+            market = int(argument[1].strip())
+        except ValueError:
+            market = api.get_market_id(argument[1].strip())
+        bin = argument[2].strip()
+        num = argument[3].strip()
+        price = argument[4].strip()
+        long = True
+        print(market, bin, num, price, long)
+        made, name = api.make_trade_bin(market, bin, num, price, long)
+        if made:
+            msg = "Placed order for " + str(num) + " long of " + name + " for " + str(price) + "¢"
+        else:
+            msg = "Unable to place order"
+        await message.channel.send(msg)
+    elif message.content.startswith(",pr") and str(message.author.id) == "324063771339259904":
+        argument = message.content.split(';')
+        try:
+            market = int(argument[1].strip())
+        except ValueError:
+            market = api.get_market_id(argument[1].strip())
+        max_num = int(argument[2].strip())
+        bins = api.get_all_offers(market)
+        short = api.get_all_short(bins)
+        spread, risk = main.optimize_spread(short, max_num, True)
+        print(spread)
+        print(short)
+        traded, made = api.purchase_spread(market, spread, short)
+        failed = 0
+        for work in traded:
+            if not work:
+                failed += 1
+        msg = "Purchased optimal spread for market " + str(market) + " and made $" + str(made) + "\n"
+        if failed:
+            msg += "Failed to purchase " + str(failed) + " bins"
+        await message.channel.send(msg)
+
 
 @client.event
 async def on_ready():
@@ -385,5 +441,5 @@ async def poll_check():
 
 
 client.loop.create_task(my_background_task())
-client.loop.create_task(poll_check())
+# client.loop.create_task(poll_check())
 client.run(auths.discord_token)
