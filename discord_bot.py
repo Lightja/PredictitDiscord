@@ -267,11 +267,59 @@ async def on_message(message):
         embed = discord.Embed(title="command stats", description=msg, color=2206669)
         await message.channel.send(embed=embed)
     elif message.content.startswith(",nh"):
-        msg = ""
-        response = requests.get(
-            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-        print(response)
-
+        argument = message.content.split(' ')
+        try:
+            county = argument[1:]
+            whole = ""
+            for part in county:
+                whole += part + " "
+            county = whole.strip()
+        except KeyError:
+            county = None
+        old = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+        results = requests.get(
+            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
+        if not county:
+            candidate_results = results['data']['races'][0]['candidates']
+            msg = "```"
+            for candidate in candidate_results:
+                if candidate['last_name'] in old.keys():
+                    msg += candidate['last_name'] + "  " + ' ' * (9-len(candidate['last_name'])) + str(candidate['votes']) + ' ' * (5-len(str(candidate['votes']))) + "  " + candidate['percent_display'] + "%\n"
+            msg += str(results['data']['races'][0]['precincts_reporting']) + "/" + str(results['data']['races'][0]['precincts_total']) + " reporting\n"
+            msg += "```"
+            title = "NH Results"
+            embed = discord.Embed(title=title, description=msg, color=2206669,
+                                  url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+            await message.channel.send(embed=embed)
+        else:
+            county_results = results['data']['races'][0]['counties']
+            for place in county_results:
+                if place['name'].lower() == county.lower():
+                    title = "NH results for " + place['name']
+                    msg = "```"
+                    for name, num in place['results'].items():
+                        for key in old.keys():
+                            if key.lower() in name:
+                                msg += key + "  " + ' ' * (9-len(key)) + str(num) + '\n'
+                    msg += str(place['reporting']) + "/" + str(place['precincts']) + " reporting\n"
+                    msg += "```"
+                    embed = discord.Embed(title=title, description=msg, color=2206669,
+                                          url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+                    await message.channel.send(embed=embed)
+                    return
+            town_results = results['data']['races'][0]['townships']
+            for place in town_results:
+                if place['name'].lower() == county.lower():
+                    title = "NH results for " + place['name']
+                    msg = "```"
+                    for name, num in place['results'].items():
+                        for key in old.keys():
+                            if key.lower() in name:
+                                msg += key + "  " + ' ' * (9 - len(key)) + str(num) + '\n'
+                    msg += "```"
+                    embed = discord.Embed(title=title, description=msg, color=2206669,
+                                          url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+                    await message.channel.send(embed=embed)
 
 @client.event
 async def on_ready():
@@ -300,11 +348,11 @@ async def poll_check():
     results = requests.get(
         "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
     candidate_results = results['data']['races'][0]['candidates']
-    # for candidate in candidate_results:
-    #     try:
-    #         old[candidate['last_name']] += candidate['votes']
-    #     except KeyError:
-    #         pass
+    for candidate in candidate_results:
+        try:
+            old[candidate['last_name']] += candidate['votes']
+        except KeyError:
+            pass
     print(old)
     while client.is_ready():
         changed = False
@@ -321,12 +369,17 @@ async def poll_check():
         print(old)
         if changed:
             title = "NH Results Changed"
-            msg = ""
-            for candidate, num in old.items():
-                msg += candidate + ": " + str(num) + "\n"
+            msg = "```"
+            for candidate in candidate_results:
+                if candidate['last_name'] in old.keys():
+                    msg += candidate['last_name'] + "  " + ' ' * (9 - len(candidate['last_name'])) + str(
+                        candidate['votes']) + ' ' * (5 - len(str(candidate['votes']))) + "  " + candidate[
+                               'percent_display'] + "%\n"
+            msg += str(results['data']['races'][0]['precincts_reporting']) + "/" + str(results['data']['races'][0]['precincts_total']) + " reporting\n"
+            msg += "```"
             print("NH Update")
             embed = discord.Embed(title=title, description=msg, color=2206669,
-                                  url="https://features.desmoinesregister.com/news/politics/iowa-caucuses-results-alignment/")
+                                  url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
             await client.get_channel(671281289105768449).send(embed=embed)
         await asyncio.sleep(5)
 
