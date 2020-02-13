@@ -33,14 +33,14 @@ class DDHQ:
         :return: A dictionary of how many votes each candidate has in the county
         {"sanders": 100, "biden":20, ..., "precinct_total": 50, "precinct_counted": 12, etc}
         """
-        return self.get_all_counties()[county_name]
+        return self.get_all_counties()[county_name.lower()]
 
     def get_precinct(self, precinct_name):
         """
         :return: A dictionary of how many votes each candidate has in the precinct
         {"sanders": 100, "biden":20, ..., "reported": True, etc}
         """
-        return self.get_all_precincts()[precinct_name]
+        return self.get_all_precincts()[precinct_name.lower()]
 
 
 class AP:
@@ -60,29 +60,55 @@ class AP:
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
         """
         data = self.get_data()
-        return {}  # TODO
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+        for candidate in data['data']['races'][0]['candidates']:
+            try:
+                votes[candidate['last_name']] += candidate['votes']
+            except KeyError:
+                pass
+        votes['precinct_total'] = data['data']['races'][0]['precincts_reporting']
+        votes['precinct_counted'] = data['data']['races'][0]['precincts_total']
+        return votes
 
     def get_all_counties(self):
+        county_results = {}
         data = self.get_data()
-        return {}  # TODO
+        county_raw = data['data']['races'][0]['counties']
+        for place in county_raw:
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            for name, num in place['results'].items():
+                for key in votes.keys():
+                    if key.lower() in name:
+                        votes[key] = num
+            county_results[place['name'].lower()] = votes
+        return county_results
 
     def get_all_precincts(self):
+        precinct_results = {}
         data = self.get_data()
-        return {}  # TODO
+        town_results = data['data']['races'][0]['townships']
+        for place in town_results:
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            for name, num in place['results'].items():
+                for key in votes.keys():
+                    if key.lower() in name:
+                        votes[key] = num
+            precinct_results[place['name'].lower()] = votes
+        return precinct_results
 
     def get_county(self, county_name):
         """
         :return: A dictionary of how many votes each candidate has in the county
         {"sanders": 100, "biden":20, ..., "precinct_total": 50, "precinct_counted": 12, etc}
         """
-        return self.get_all_counties()[county_name]
+        return self.get_all_counties()[county_name.lower()]
 
     def get_precinct(self, precinct_name):
         """
         :return: A dictionary of how many votes each candidate has in the precinct
         {"sanders": 100, "biden":20, ..., "reported": True, etc}
         """
-        return self.get_all_precincts()[precinct_name]
+        return self.get_all_precincts()[precinct_name.lower()]
 
 
 class Model:
@@ -101,3 +127,9 @@ class Model:
                     pass  # TODO
             except KeyError:
                 pass  # TODO
+
+
+nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+print(nyt.get_all_precincts())
+print(nyt.get_precinct('acworth'))
+print(nyt.get_totals())
