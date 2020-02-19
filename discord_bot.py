@@ -37,6 +37,8 @@ async def on_message(message):
             ",r "):
         stats['commands']['risk'] = stats['commands'].get('risk', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -70,6 +72,8 @@ async def on_message(message):
             ",b "):
         stats['commands']['bins'] = stats['commands'].get('bins', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         market = argument[1:]
         whole = ""
@@ -86,6 +90,8 @@ async def on_message(message):
             ",Value"):
         stats['commands']['rcp'] = stats['commands'].get('rcp', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         if len(argument) > 2:
             try:
@@ -108,6 +114,8 @@ async def on_message(message):
     elif message.content.startswith(",. "):
         stats['commands']['search_bins'] = stats['commands'].get('search_bins', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -121,6 +129,8 @@ async def on_message(message):
     elif message.content.startswith(",- "):
         stats['commands']['search_titles'] = stats['commands'].get('search_titles', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,donate)")
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -134,6 +144,8 @@ async def on_message(message):
     elif message.content.startswith(",o "):
         stats['commands']['orderbook'] = stats['commands'].get('orderbook', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -149,6 +161,8 @@ async def on_message(message):
     elif message.content.startswith(",rcp") or message.content.startswith(",RCP"):
         stats['commands']['rcp'] = stats['commands'].get('rcp', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         keyword = argument[1:]
         whole = ""
@@ -215,6 +229,8 @@ async def on_message(message):
     elif message.content.startswith(",stock") or message.content.startswith(",s "):
         stats['commands']['stocks'] = stats['commands'].get('stocks', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         argument = message.content.split(' ')
         market = argument[1:]
         whole = ""
@@ -229,6 +245,8 @@ async def on_message(message):
     elif message.content.startswith(",Help") or message.content.startswith(",help") or message.content.startswith(",h"):
         stats['commands']['help'] = stats['commands'].get('help', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         title = "Here are the commands I can perform:\n"
         msg = ",help or ,h brings up this message.\n"
         msg += ",risk or ,r figures out whether a market has negative risk or not. The keyword 'all' searches all the markets.\n"
@@ -252,6 +270,8 @@ async def on_message(message):
     elif message.content.startswith(",i") or message.content.startswith(",implied"):
         stats['commands']['implied'] = stats['commands'].get('implied', 0) + 1
         stats['users'][message.author] = stats['users'].get(message.author, 0) + 1
+        if stats['users'][message.author] % 100 == 0:
+            await message.channel.send("I see you've been using the bot quite a bit. Please consider donating some of your winnings! (,tip)")
         msg = api.divide_bins(3698, 3633)
         embed = discord.Embed(title="Implied dem presidential victory odds", description=msg, color=2206669)
         await message.channel.send(embed=embed)
@@ -301,7 +321,7 @@ async def on_message(message):
             msg = "Unable to place order"
         await message.channel.send(msg)
     elif message.content.startswith(",pr") and str(message.author.id) == "324063771339259904":
-        argument = message.content.split(';')
+        argument = message.content.split(' ')
         try:
             market = int(argument[1].strip())
         except ValueError:
@@ -321,63 +341,6 @@ async def on_message(message):
         if failed:
             msg += "Failed to purchase " + str(failed) + " bins"
         await message.channel.send(msg)
-    elif message.content.startswith(",nh"):
-        argument = message.content.split(' ')
-        try:
-            county = argument[1:]
-            whole = ""
-            for part in county:
-                whole += part + " "
-            county = whole.strip()
-        except KeyError:
-            county = None
-        old = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
-        results = requests.get(
-            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
-        if not county:
-            candidate_results = results['data']['races'][0]['candidates']
-            msg = "```"
-            for candidate in candidate_results:
-                if candidate['last_name'] in old.keys():
-                    msg += candidate['last_name'] + "  " + ' ' * (9 - len(candidate['last_name'])) + str(
-                        candidate['votes']) + ' ' * (5 - len(str(candidate['votes']))) + "  " + candidate[
-                               'percent_display'] + "%\n"
-            msg += str(results['data']['races'][0]['precincts_reporting']) + "/" + str(
-                results['data']['races'][0]['precincts_total']) + " reporting\n"
-            msg += "```"
-            title = "NH Results"
-            embed = discord.Embed(title=title, description=msg, color=2206669,
-                                  url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-            await message.channel.send(embed=embed)
-        else:
-            county_results = results['data']['races'][0]['counties']
-            for place in county_results:
-                if place['name'].lower() == county.lower():
-                    title = "NH results for " + place['name']
-                    msg = "```"
-                    for name, num in place['results'].items():
-                        for key in old.keys():
-                            if key.lower() in name:
-                                msg += key + "  " + ' ' * (9 - len(key)) + str(num) + '\n'
-                    msg += str(place['reporting']) + "/" + str(place['precincts']) + " reporting\n"
-                    msg += "```"
-                    embed = discord.Embed(title=title, description=msg, color=2206669,
-                                          url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-                    await message.channel.send(embed=embed)
-                    return
-            town_results = results['data']['races'][0]['townships']
-            for place in town_results:
-                if place['name'].lower() == county.lower():
-                    title = "NH results for " + place['name']
-                    msg = "```"
-                    for name, num in place['results'].items():
-                        for key in old.keys():
-                            if key.lower() in name:
-                                msg += key + "  " + ' ' * (9 - len(key)) + str(num) + '\n'
-                    msg += "```"
-                    embed = discord.Embed(title=title, description=msg, color=2206669,
-                                          url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-                    await message.channel.send(embed=embed)
 
 
 @client.event
