@@ -137,11 +137,14 @@ class AP:
         data = requests.get("https://results.decisiondeskhq.com/api/v1/elections/?limit=1000&featured=true").json()
         races = data['results']
         x = -1
+        #Identify which race matches the passed in state:
         for i in range(0,len(races)):
             if ((races[i]['state'].lower() == state.lower() or races[i]['stateAbbr'].lower() == state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
                 x = i
+        #Initialize vote totals to 0 and assign list of candidates for specified race:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
         candidates = races[x]['candidates']
+        #Count Votes and vote total for each candidate we're counting for (the ones initialized to 0 above)
         for i in range(0,len(candidates)):
             votes['Total'] += candidates[i]['votes']
             if candidates[i]['lastName'] in votes.keys():
