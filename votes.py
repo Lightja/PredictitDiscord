@@ -113,7 +113,7 @@ class AP:
     def DDHQResultsVotes():
         """
         :return: A dictionary of how many votes each candidate has from DDHQ's API, 
-        {"sanders":100, "biden":20, ..., total: 200}
+        {"sanders":100, "biden":20, ..., "total": 200}
         currently set to NH URL API
         """
         data = requests.get("https://results.decisiondeskhq.com/api/v1/results/?limit=1&election=1ee05d83-2d5b-48ad-8c07-dfd6f63344be&electionType=primary").json()
@@ -126,6 +126,30 @@ class AP:
             pass
         for candidate in results:
             votes['Total'] += results[candidate]
+        return votes
+            
+    def DDHQResultsVotes2(state):
+        """
+        :return: A dictionary of how many votes each candidate has from DDHQ's API, 
+        {"sanders":100, "biden":20, ..., "total": 200}
+        INPUT: string to represent state you want data from (ex: CA, ca, California, california, CALIFORNIA)
+        """
+        data = requests.get("https://results.decisiondeskhq.com/api/v1/elections/?limit=1000&featured=true").json()
+        races = data['results']
+        x = -1
+        for i in range(0,len(races)):
+            if ((races[i]['state'].lower() == state.lower() or races[i]['stateAbbr'].lower() == state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
+                x = i
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
+        candidates = races[x]['candidates']
+        for i in range(0,len(candidates)):
+            votes['Total'] += candidates[i]['votes']
+            if candidates[i]['lastName'] in votes.keys():
+                votes[candidates[i]['lastName']] = candidates[i]['votes']
+        return votes
+
+            
+            
         
             
 
