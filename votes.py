@@ -84,7 +84,6 @@ class DDHQ:
         county_results = {}
         data = self.get_data()
         races = data['results']
-        x = -1
         countyurl = 'County data not found.'
         #Identify which race matches the passed in state:
         for i in range(0,len(races)):
@@ -94,10 +93,7 @@ class DDHQ:
         countydata = requests.get(countyurl).json()
         county_raw = countydata['results'][0]['counties']
         for i in range(0,len(county_raw)):
-            vtotal = 0
-            for candidate in county_raw[i]['votes']:
-                vtotal += county_raw[i]['votes'][candidate]
-            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': vtotal}
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
         
             """ CANDIDATE IDs USED BY DDHQ:
             klobuchar: 8233
@@ -117,13 +113,38 @@ class DDHQ:
                 elif cid == '11918': votes['Steyer'] = county_raw[i]['votes'][cid]
                 elif cid == '11919': votes['Biden'] = county_raw[i]['votes'][cid]
                 elif cid == '11954': votes['Bloomberg'] = county_raw[i]['votes'][cid]
+                votes['Total'] += county_raw[i]['votes'][cid]
             county_results[county_raw[i]['county'].lower()] = votes
 
         return county_results
 
     def get_all_precincts(self):
+        precinct_results = {}
         data = self.get_data()
-        return {}  # TODO
+        races = data['results']
+        countyurl = 'County data not found.'
+        #Identify which race matches the passed in state:
+        for i in range(0,len(races)):
+            if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
+                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i]['id'] + "&electionType=primary&limit=1&offset=0"
+                
+        countydata = requests.get(countyurl).json()
+        precinct_raw = countydata['results'][0]['vcus']['counties']
+        for i in range(0,len(precinct_raw)):
+            for j in range(0,len(precinct_raw[i]['vcus'])):
+                votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
+                for cid in precinct_raw[i]['vcus'][j]['votes']:
+                    if cid == '8233': votes['Klobuchar'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '8': votes['Sanders'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '8284': votes['Sanders'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11921': votes['Warren'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11918': votes['Steyer'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11919': votes['Biden'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11954': votes['Bloomberg'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    votes['Total'] += precinct_raw[i]['vcus'][j]['votes'][cid]
+                precinct_results[precinct_raw[i]['vcus'][j]['vcu'].lower()] = votes
+        
+        return precinct_results
 
     def get_county(self, county_name):
         """
