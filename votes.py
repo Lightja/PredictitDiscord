@@ -180,11 +180,12 @@ class AP:
         data = self.get_data()
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
         for candidate in data['data']['races'][0]['candidates']:
+            
             try:
                 votes[candidate['last_name']] += candidate['votes']
-                votes['Total'] += candidate['votes']
             except KeyError:
                 pass
+            votes['Total'] += candidate['votes']
         votes['precinct_total'] = data['data']['races'][0]['precincts_reporting']
         votes['precinct_counted'] = data['data']['races'][0]['precincts_total']
         return votes
@@ -198,8 +199,8 @@ class AP:
             for name, num in place['results'].items():
                 for key in votes.keys():
                     if key.lower() in name:
-                        votes['Total'] += num
                         votes[key] = num
+                votes['Total'] += num
             county_results[place['name'].lower()] = votes
         return county_results
 
@@ -212,8 +213,8 @@ class AP:
             for name, num in place['results'].items():
                 for key in votes.keys():
                     if key.lower() in name:
-                        votes['Total'] += num
                         votes[key] = num
+                votes['Total'] += num
             precinct_results[place['name'].lower()] = votes
         return precinct_results
 
@@ -249,6 +250,34 @@ class Model:
             except KeyError:
                 pass  # TODO
                 
+def MergeResults(APres, DDHQres):
+    mergedData = {}
+    
+    for precinct in APres.keys():
+        if precinct in DDHQres.keys():
+            if APres[precinct]['Total'] > DDHQres[precinct]['Total']: mergedData[precinct] = APres[precinct]
+            else:
+                mergedData[precinct] = DDHQres[precinct]
+        else: mergedData[precinct] = APres[precinct]
+    for precinct in DDHQres.keys():
+        if precinct in APres.keys():
+            if APres[precinct]['Total'] > DDHQres[precinct]['Total']: mergedData[precinct] = APres[precinct]
+            else: mergedData[precinct] = DDHQres[precinct]
+        else: mergedData[precinct] = DDHQres[precinct]
+    mergedData['Total'] = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+    for precinct in mergedData:
+        if precinct != 'Total':
+            mergedData['Total']['Klobuchar'] += mergedData[precinct]['Klobuchar']
+            mergedData['Total']['Sanders'] += mergedData[precinct]['Sanders']
+            mergedData['Total']['Warren'] += mergedData[precinct]['Warren']
+            mergedData['Total']['Yang'] += mergedData[precinct]['Yang']
+            mergedData['Total']['Steyer'] += mergedData[precinct]['Steyer']
+            mergedData['Total']['Biden'] += mergedData[precinct]['Biden']
+            mergedData['Total']['Buttigieg'] += mergedData[precinct]['Buttigieg']
+            mergedData['Total']['Bloomberg'] += mergedData[precinct]['Bloomberg']
+            mergedData['Total']['Total'] += mergedData[precinct]['Total']
+    return mergedData
+            
                 
 def DDHQResultsVotes():
         """
@@ -266,6 +295,12 @@ def DDHQResultsVotes():
         for candidate in results:
             votes['Total'] += results[candidate]
         return votes
+
+nh = DDHQ("nh")
+#print(nh.get_totals())
+print("DDHQ TOTALS:")
+print(nh.get_totals())
+#print(len(nh.get_all_precincts()))
 
 
 nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
