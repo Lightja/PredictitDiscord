@@ -6,6 +6,17 @@ class DDHQ:
         self.url = "https://results.decisiondeskhq.com/api/v1/elections/?limit=1000&featured=true"
         self.state = state #string representing state, should be like "ia", "IA", "Iowa", "IOWA", etc.
         
+        """ CANDIDATE IDs USED BY DDHQ:
+            klobuchar: 8233
+            sanders: 8
+            warren: 8284
+            steyer: 11921
+            biden: 11918
+            buttigieg: 11919
+            yang: 11920
+            bloomberg: 11954
+            """
+        
         
 
     def get_data(self):
@@ -94,24 +105,15 @@ class DDHQ:
         county_raw = countydata['results'][0]['counties']
         for i in range(0,len(county_raw)):
             votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
-        
-            """ CANDIDATE IDs USED BY DDHQ:
-            klobuchar: 8233
-            sanders: 8
-            warren: 8284
-            steyer: 11921
-            biden: 11918
-            buttigieg: 11919
-            bloomberg: 11954
-            """
 
             for cid in county_raw[i]['votes']:
                 if cid == '8233': votes['Klobuchar'] = county_raw[i]['votes'][cid]
                 elif cid == '8': votes['Sanders'] = county_raw[i]['votes'][cid]
-                elif cid == '8284': votes['Sanders'] = county_raw[i]['votes'][cid]
-                elif cid == '11921': votes['Warren'] = county_raw[i]['votes'][cid]
-                elif cid == '11918': votes['Steyer'] = county_raw[i]['votes'][cid]
-                elif cid == '11919': votes['Biden'] = county_raw[i]['votes'][cid]
+                elif cid == '8284': votes['Warren'] = county_raw[i]['votes'][cid]
+                elif cid == '11921': votes['Steyer'] = county_raw[i]['votes'][cid]
+                elif cid == '11918': votes['Biden'] = county_raw[i]['votes'][cid]
+                elif cid == '11919': votes['Buttigieg'] = county_raw[i]['votes'][cid]
+                elif cid == '11920': votes['Yang'] = county_raw[i]['votes'][cid]
                 elif cid == '11954': votes['Bloomberg'] = county_raw[i]['votes'][cid]
                 votes['Total'] += county_raw[i]['votes'][cid]
             county_results[county_raw[i]['county'].lower()] = votes
@@ -136,14 +138,60 @@ class DDHQ:
                 for cid in precinct_raw[i]['vcus'][j]['votes']:
                     if cid == '8233': votes['Klobuchar'] = precinct_raw[i]['vcus'][j]['votes'][cid]
                     elif cid == '8': votes['Sanders'] = precinct_raw[i]['vcus'][j]['votes'][cid]
-                    elif cid == '8284': votes['Sanders'] = precinct_raw[i]['vcus'][j]['votes'][cid]
-                    elif cid == '11921': votes['Warren'] = precinct_raw[i]['vcus'][j]['votes'][cid]
-                    elif cid == '11918': votes['Steyer'] = precinct_raw[i]['vcus'][j]['votes'][cid]
-                    elif cid == '11919': votes['Biden'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '8284': votes['Warren'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11921': votes['Steyer'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11918': votes['Biden'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11919': votes['Buttigieg'] = precinct_raw[i]['vcus'][j]['votes'][cid]
+                    elif cid == '11920': votes['Yang'] = precinct_raw[i]['vcus'][j]['votes'][cid]
                     elif cid == '11954': votes['Bloomberg'] = precinct_raw[i]['vcus'][j]['votes'][cid]
                     votes['Total'] += precinct_raw[i]['vcus'][j]['votes'][cid]
                 precinct_results[precinct_raw[i]['vcus'][j]['vcu'].lower()] = votes
         
+        return precinct_results
+
+    def get_county(self, county_name):
+        """
+        :return: A dictionary of how many votes each candidate has in the county
+        {"sanders": 100, "biden":20, ..., "precinct_total": 50, "precinct_counted": 12, etc}
+        """
+        return self.get_all_counties()[county_name.lower()]
+
+    def get_precinct(self, precinct_name):
+        """
+        :return: A dictionary of how many votes each candidate has in the precinct
+        {"sanders": 100, "biden":20, ..., "reported": True, etc}
+        """
+        return self.get_all_precincts()[precinct_name.lower()]
+        
+class Edison:
+    def __init__(self, url):
+        self.url = url
+        #https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
+        
+
+    def get_data(self):
+        """
+        Uses API to get json vote data
+        :return: A dictionary of the raw vote data from DDHQ
+        """
+        return requests.get(url=self.url).json()
+
+    def get_totals(self):
+        """
+        :return: A dictionary of how many votes each candidate has in the state
+        {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
+        """
+        data = self.get_data()
+        
+        return votes
+        
+        
+    def get_all_counties(self):
+        county_results = {}
+        return county_results
+
+    def get_all_precincts(self):
+        precinct_results = {}
         return precinct_results
 
     def get_county(self, county_name):
@@ -214,7 +262,7 @@ class AP:
                 for key in votes.keys():
                     if key.lower() in name:
                         votes[key] = num
-                votes['Total'] += num
+                    votes['Total'] += num
             precinct_results[place['name'].lower()] = votes
         return precinct_results
 
@@ -264,6 +312,19 @@ def MergeResults(APres, DDHQres):
             if APres[precinct]['Total'] > DDHQres[precinct]['Total']: mergedData[precinct] = APres[precinct]
             else: mergedData[precinct] = DDHQres[precinct]
         else: mergedData[precinct] = DDHQres[precinct]
+        
+    #identify differing precincts:
+    """
+    for precinct in APres.keys():
+        if precinct in mergedData:
+            if APres[precinct] != mergedData[precinct]:
+                print("DISCREPENCY FOUND: " + precinct)
+                print("AP, DDHQ, merged: ")
+                print(APres[precinct])
+                print(DDHQres[precinct])
+                print(mergedData[precinct])
+    """
+    
     mergedData['Total'] = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
     for precinct in mergedData:
         if precinct != 'Total':
