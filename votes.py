@@ -108,8 +108,6 @@ class DDHQ:
             buttigieg: 11919
             bloomberg: 11954
             """
-            print(county_raw[i]['county'])
-            print(len(county_raw))
 
             for cid in county_raw[i]['votes']:
                 if cid == '8233': votes['Klobuchar'] = county_raw[i]['votes'][cid]
@@ -121,15 +119,7 @@ class DDHQ:
                 elif cid == '11954': votes['Bloomberg'] = county_raw[i]['votes'][cid]
             county_results[county_raw[i]['county'].lower()] = votes
 
-            
-
         return county_results
-            
-        
-        
-        
-        
-        return {}  # TODO
 
     def get_all_precincts(self):
         data = self.get_data()
