@@ -23,10 +23,12 @@ class DDHQ:
         data = self.get_data()
         races = data['results']
         x = -1
+        countyurl = 'County data not found.'
         #Identify which race matches the passed in state:
         for i in range(0,len(races)):
             if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
                 x = i
+                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i]['id'] + "&electionType=primary&limit=1&offset=0"
         #Initialize vote totals to 0 and assign list of candidates for specified race:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
         candidates = races[x]['candidates']
@@ -35,6 +37,9 @@ class DDHQ:
             votes['Total'] += candidates[i]['votes']
             if candidates[i]['lastName'] in votes.keys():
                 votes[candidates[i]['lastName']] = candidates[i]['votes']
+        countydata = requests.get(countyurl).json()
+        votes['precinct_total'] = countydata['results'][0]['precincts']['total']
+        votes['precinct_counted'] = countydata['results'][0]['precincts']['reporting']
         return votes
         
     def get_national_totals(self):
@@ -162,10 +167,11 @@ class AP:
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
         """
         data = self.get_data()
-        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
         for candidate in data['data']['races'][0]['candidates']:
             try:
                 votes[candidate['last_name']] += candidate['votes']
+                votes['Total'] += candidate['votes']
             except KeyError:
                 pass
         votes['precinct_total'] = data['data']['races'][0]['precincts_reporting']
@@ -177,10 +183,11 @@ class AP:
         data = self.get_data()
         county_raw = data['data']['races'][0]['counties']
         for place in county_raw:
-            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
             for name, num in place['results'].items():
                 for key in votes.keys():
                     if key.lower() in name:
+                        votes['Total'] += num
                         votes[key] = num
             county_results[place['name'].lower()] = votes
         return county_results
@@ -190,10 +197,11 @@ class AP:
         data = self.get_data()
         town_results = data['data']['races'][0]['townships']
         for place in town_results:
-            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
             for name, num in place['results'].items():
                 for key in votes.keys():
                     if key.lower() in name:
+                        votes['Total'] += num
                         votes[key] = num
             precinct_results[place['name'].lower()] = votes
         return precinct_results
