@@ -28,7 +28,7 @@ class DDHQ:
             if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
                 x = i
         #Initialize vote totals to 0 and assign list of candidates for specified race:
-        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
         candidates = races[x]['candidates']
         #Count Votes and vote total for each candidate we're counting for (the ones initialized to 0 above)
         for i in range(0,len(candidates)):
@@ -44,7 +44,7 @@ class DDHQ:
         """
         data = self.get_data()
         races = data['results']
-        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
         for i in range(0,len(races)):
             candidates = races[i]['candidates']
             for i in range(0,len(candidates)):
@@ -63,7 +63,7 @@ class DDHQ:
         """
         data = self.get_data()
         races = data['results']
-        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': 0}
         for state in states:
             state = state.lower()
         for i in range(0,len(races)):
@@ -80,13 +80,46 @@ class DDHQ:
         data = self.get_data()
         races = data['results']
         x = -1
+        countyurl = 'County data not found.'
         #Identify which race matches the passed in state:
         for i in range(0,len(races)):
             if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
-                x = i
-        #Initialize vote totals to 0 and assign list of candidates for specified race:
-        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Total': 0}
-        candidates = races[x]['candidates']
+                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i]['id'] + "&electionType=primary&limit=1&offset=0"
+                
+        countydata = requests.get(countyurl).json()
+        county_raw = countydata['results'][0]['counties']
+        for i in range(0,len(county_raw)):
+            vtotal = 0
+            for candidate in county_raw[i]['votes']:
+                vtotal += county_raw[i]['votes'][candidate]
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg':0, 'Total': vtotal}
+        
+            """ CANDIDATE IDs USED BY DDHQ:
+            klobuchar: 8233
+            sanders: 8
+            warren: 8284
+            steyer: 11921
+            biden: 11918
+            buttigieg: 11919
+            bloomberg: 11954
+            """
+            print(county_raw[i]['county'])
+            print(len(county_raw))
+
+            for cid in county_raw[i]['votes']:
+                if cid == '8233': votes['Klobuchar'] = county_raw[i]['votes'][cid]
+                elif cid == '8': votes['Sanders'] = county_raw[i]['votes'][cid]
+                elif cid == '8284': votes['Sanders'] = county_raw[i]['votes'][cid]
+                elif cid == '11921': votes['Warren'] = county_raw[i]['votes'][cid]
+                elif cid == '11918': votes['Steyer'] = county_raw[i]['votes'][cid]
+                elif cid == '11919': votes['Biden'] = county_raw[i]['votes'][cid]
+                elif cid == '11954': votes['Bloomberg'] = county_raw[i]['votes'][cid]
+            county_results[county_raw[i]['county'].lower()] = votes
+
+            
+
+        return county_results
+            
         
         
         
@@ -208,7 +241,7 @@ def DDHQResultsVotes():
         
         results = data['results'][0]['votes']
         try:
-            votes = {'Klobuchar': results['8233'], 'Sanders': results['8'], 'Warren': results['8284'], 'Yang': results['11920'], 'Steyer': results['11921'], 'Biden': results['11918'], 'Buttigieg': results['11919'], 'Total':0 }
+            votes = {'Klobuchar': results['8233'], 'Sanders': results['8'], 'Warren': results['8284'], 'Yang': results['11920'], 'Steyer': results['11921'], 'Biden': results['11918'], 'Buttigieg': results['11919'], 'Bloomberg':results['11954'], 'Total':0 }
         except KeyError:
             pass
         for candidate in results:
