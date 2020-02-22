@@ -5,7 +5,7 @@ class DDHQ:
     def __init__(self, state):
         self.url = "https://results.decisiondeskhq.com/api/v1/elections/?limit=1000&featured=true"
         self.state = state #string representing state, should be like "ia", "IA", "Iowa", "IOWA", etc.
-        
+
         """ CANDIDATE IDs USED BY DDHQ:
             klobuchar: 8233
             sanders: 8
@@ -16,8 +16,6 @@ class DDHQ:
             yang: 11920
             bloomberg: 11954
             """
-        
-        
 
     def get_data(self):
         """
@@ -52,7 +50,7 @@ class DDHQ:
         votes['precinct_total'] = countydata['results'][0]['precincts']['total']
         votes['precinct_counted'] = countydata['results'][0]['precincts']['reporting']
         return votes
-        
+
     def get_national_totals(self):
         """
         :return: A dictionary of how many votes each candidate has nationally across all states
@@ -68,7 +66,7 @@ class DDHQ:
                 if candidates[i]['lastName'] in votes.keys():
                     votes[candidates[i]['lastName']] += candidates[i]['votes']
         return votes
-        
+
     def get_totals_sum(self, states):
         """
         :input: list of strings representing the states you wish summed, ex for super tuesday: 
@@ -88,9 +86,9 @@ class DDHQ:
                 for i in range(0,len(candidates)):
                     votes['Total'] += candidates[i]['votes']
                     if candidates[i]['lastName'] in votes.keys():
-                        votes[candidates[i]['lastName']] += candidates[i]['votes'] 
+                        votes[candidates[i]['lastName']] += candidates[i]['votes']
         return votes
-        
+
     def get_all_counties(self):
         county_results = {}
         data = self.get_data()
@@ -100,7 +98,7 @@ class DDHQ:
         for i in range(0,len(races)):
             if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
                 countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i]['id'] + "&electionType=primary&limit=1&offset=0"
-                
+
         countydata = requests.get(countyurl).json()
         county_raw = countydata['results'][0]['counties']
         for i in range(0,len(county_raw)):
@@ -129,7 +127,7 @@ class DDHQ:
         for i in range(0,len(races)):
             if ((races[i]['state'].lower() == self.state.lower() or races[i]['stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i]['office'] == 'president'):
                 countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i]['id'] + "&electionType=primary&limit=1&offset=0"
-                
+
         countydata = requests.get(countyurl).json()
         precinct_raw = countydata['results'][0]['vcus']['counties']
         for i in range(0,len(precinct_raw)):
@@ -146,7 +144,7 @@ class DDHQ:
                     elif cid == '11954': votes['Bloomberg'] = precinct_raw[i]['vcus'][j]['votes'][cid]
                     votes['Total'] += precinct_raw[i]['vcus'][j]['votes'][cid]
                 precinct_results[precinct_raw[i]['vcus'][j]['vcu'].lower()] = votes
-        
+
         return precinct_results
 
     def get_county(self, county_name):
@@ -162,12 +160,12 @@ class DDHQ:
         {"sanders": 100, "biden":20, ..., "reported": True, etc}
         """
         return self.get_all_precincts()[precinct_name.lower()]
-        
+
 class Edison:
     def __init__(self, url):
         self.url = url
         #https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
-        
+
 
     def get_data(self):
         """
@@ -182,10 +180,9 @@ class Edison:
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
         """
         data = self.get_data()
-        
-        return votes
-        
-        
+        return
+
+
     def get_all_counties(self):
         county_results = {}
         return county_results
@@ -210,8 +207,9 @@ class Edison:
 
 
 class AP:
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, state, date):
+        self.state = state
+        self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(date, state)
 
     def get_data(self):
         """
@@ -228,7 +226,7 @@ class AP:
         data = self.get_data()
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
         for candidate in data['data']['races'][0]['candidates']:
-            
+
             try:
                 votes[candidate['last_name']] += candidate['votes']
             except KeyError:
@@ -252,19 +250,34 @@ class AP:
             county_results[place['name'].lower()] = votes
         return county_results
 
-    def get_all_precincts(self):
-        precinct_results = {}
+    def get_all_counties_first(self):
+        county_results = {}
         data = self.get_data()
-        town_results = data['data']['races'][0]['townships']
-        for place in town_results:
+        county_raw = data['data']['races'][0]['counties']
+        for place in county_raw:
             votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
-            for name, num in place['results'].items():
+            for name, num in place['results_align1'].items():
                 for key in votes.keys():
                     if key.lower() in name:
                         votes[key] = num
-                    votes['Total'] += num
-            precinct_results[place['name'].lower()] = votes
-        return precinct_results
+                votes['Total'] += num
+            county_results[place['name'].lower()] = votes
+        return county_results
+
+    def get_all_counties_second(self):
+        county_results = {}
+        data = self.get_data()
+        county_raw = data['data']['races'][0]['counties']
+        for place in county_raw:
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+                     'Bloomberg': 0, 'Total': 0}
+            for name, num in place['results_alignfinal'].items():
+                for key in votes.keys():
+                    if key.lower() in name:
+                        votes[key] = num
+                votes['Total'] += num
+            county_results[place['name'].lower()] = votes
+        return county_results
 
     def get_county(self, county_name):
         """
@@ -273,34 +286,10 @@ class AP:
         """
         return self.get_all_counties()[county_name.lower()]
 
-    def get_precinct(self, precinct_name):
-        """
-        :return: A dictionary of how many votes each candidate has in the precinct
-        {"sanders": 100, "biden":20, ..., "reported": True, etc}
-        """
-        return self.get_all_precincts()[precinct_name.lower()]
-    
 
-class Model:
-    def __init__(self, precinct_historical, precinct_current):
-        self.precinct_historical = precinct_historical
-        self.precinct_current = precinct_current
-
-    def update_count(self, precinct_current):
-        self.precinct_current = precinct_current
-
-    def extrapolate(self):
-        for precinct_name, vote_dict in self.precinct_current.items():
-            try:
-                prev_total = self.precinct_historical[precinct_name]
-                for candidate, vote_total in vote_dict:
-                    pass  # TODO
-            except KeyError:
-                pass  # TODO
-                
 def MergeResults(APres, DDHQres):
     mergedData = {}
-    
+
     for precinct in APres.keys():
         if precinct in DDHQres.keys():
             if APres[precinct]['Total'] > DDHQres[precinct]['Total']: mergedData[precinct] = APres[precinct]
@@ -312,7 +301,7 @@ def MergeResults(APres, DDHQres):
             if APres[precinct]['Total'] > DDHQres[precinct]['Total']: mergedData[precinct] = APres[precinct]
             else: mergedData[precinct] = DDHQres[precinct]
         else: mergedData[precinct] = DDHQres[precinct]
-        
+
     #identify differing precincts:
     """
     for precinct in APres.keys():
@@ -324,7 +313,7 @@ def MergeResults(APres, DDHQres):
                 print(DDHQres[precinct])
                 print(mergedData[precinct])
     """
-    
+
     mergedData['Total'] = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
     for precinct in mergedData:
         if precinct != 'Total':
@@ -338,16 +327,16 @@ def MergeResults(APres, DDHQres):
             mergedData['Total']['Bloomberg'] += mergedData[precinct]['Bloomberg']
             mergedData['Total']['Total'] += mergedData[precinct]['Total']
     return mergedData
-            
-                
+
+
 def DDHQResultsVotes():
         """
-        :return: A dictionary of how many votes each candidate has from DDHQ's API, 
+        :return: A dictionary of how many votes each candidate has from DDHQ's API,
         {"sanders":100, "biden":20, ..., "total": 200}
         currently set to NH URL API
         """
         data = requests.get("https://results.decisiondeskhq.com/api/v1/results/?limit=1&election=1ee05d83-2d5b-48ad-8c07-dfd6f63344be&electionType=primary").json()
-        
+
         results = data['results'][0]['votes']
         try:
             votes = {'Klobuchar': results['8233'], 'Sanders': results['8'], 'Warren': results['8284'], 'Yang': results['11920'], 'Steyer': results['11921'], 'Biden': results['11918'], 'Buttigieg': results['11919'], 'Bloomberg':results['11954'], 'Total':0 }
@@ -356,15 +345,3 @@ def DDHQResultsVotes():
         for candidate in results:
             votes['Total'] += results[candidate]
         return votes
-
-nh = DDHQ("nh")
-#print(nh.get_totals())
-print("DDHQ TOTALS:")
-print(nh.get_totals())
-#print(len(nh.get_all_precincts()))
-
-
-nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-print(nyt.get_all_precincts())
-print(nyt.get_precinct('acworth'))
-print(nyt.get_totals())
