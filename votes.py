@@ -253,50 +253,6 @@ class Edison:
         return self.get_all_precincts()[precinct_name.lower()]
 
 
-class Edison:
-    def __init__(self, url):
-        self.url = url
-        # https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
-
-    def get_data(self):
-        """
-        Uses API to get json vote data
-        :return: A dictionary of the raw vote data from DDHQ
-        """
-        return requests.get(url=self.url).json()
-
-    def get_totals(self):
-        """
-        :return: A dictionary of how many votes each candidate has in the state
-        {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
-        """
-        data = self.get_data()
-
-        return votes
-
-    def get_all_counties(self):
-        county_results = {}
-        return county_results
-
-    def get_all_precincts(self):
-        precinct_results = {}
-        return precinct_results
-
-    def get_county(self, county_name):
-        """
-        :return: A dictionary of how many votes each candidate has in the county
-        {"sanders": 100, "biden":20, ..., "precinct_total": 50, "precinct_counted": 12, etc}
-        """
-        return self.get_all_counties()[county_name.lower()]
-
-    def get_precinct(self, precinct_name):
-        """
-        :return: A dictionary of how many votes each candidate has in the precinct
-        {"sanders": 100, "biden":20, ..., "reported": True, etc}
-        """
-        return self.get_all_precincts()[precinct_name.lower()]
-
-
 class AP:
     def __init__(self, url):
         self.url = url
