@@ -2,9 +2,10 @@ import requests
 
 
 class DDHQ:
-    def __init__(self, state):
+    def __init__(self, state, alignment):
         self.url = "https://results.decisiondeskhq.com/api/v1/elections/?limit=1000&featured=true"
         self.state = state  # string representing state, should be like "ia", "IA", "Iowa", "IOWA", etc.
+        self.alignment = alignment
 
         """ CANDIDATE IDs USED BY DDHQ:
             klobuchar: 8233
@@ -38,9 +39,18 @@ class DDHQ:
             if ((races[i]['state'].lower() == self.state.lower() or races[i][
                 'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
                 'office'] == 'president'):
-                x = i
-                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                    'id'] + "&electionType=primary&limit=1&offset=0"
+                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
+                    x = i
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
+                    x = i
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
+                    x = i
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
         # Initialize vote totals to 0 and assign list of candidates for specified race:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
                  'Bloomberg': 0, 'Total': 0}
@@ -56,6 +66,7 @@ class DDHQ:
         return votes
 
     def get_national_totals(self):
+        ## DO NOT USE: CURRENTLY SUMS ALL ROUNDS OF ALL CAUCUSES, SO CAUCUS VOTES ARE COUNTED TWICE OR THRICE
         """
         :return: A dictionary of how many votes each candidate has nationally across all states
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
@@ -101,12 +112,22 @@ class DDHQ:
         races = data['results']
         countyurl = 'County data not found.'
         # Identify which race matches the passed in state:
+        
         for i in range(0, len(races)):
             if ((races[i]['state'].lower() == self.state.lower() or races[i][
                 'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
                 'office'] == 'president'):
-                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                    'id'] + "&electionType=primary&limit=1&offset=0"
+                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                        
+
 
         countydata = requests.get(countyurl).json()
         county_raw = countydata['results'][0]['counties']
@@ -146,8 +167,15 @@ class DDHQ:
             if ((races[i]['state'].lower() == self.state.lower() or races[i][
                 'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
                 'office'] == 'president'):
-                countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                    'id'] + "&electionType=primary&limit=1&offset=0"
+                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
 
         countydata = requests.get(countyurl).json()
         precinct_raw = countydata['results'][0]['vcus']['counties']
