@@ -378,7 +378,8 @@ print("DDHQ TOTALS:")
 print(nh.get_totals())
 #print(len(nh.get_all_precincts()))
 
-
+##test
+##test
 nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
 print(nyt.get_all_precincts())
 print(nyt.get_precinct('acworth'))
