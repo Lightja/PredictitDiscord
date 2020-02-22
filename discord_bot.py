@@ -5,10 +5,12 @@ import discord
 import requests
 import json
 import yfinance as yf
+from model import Model
 
 api = main.Api()
 client = discord.Client()
 stats = {'users': {}, 'commands': {}}
+nevada = Model("Nevada")
 
 
 @client.event
@@ -341,6 +343,17 @@ async def on_message(message):
         if failed:
             msg += "Failed to purchase " + str(failed) + " bins"
         await message.channel.send(msg)
+    elif message.content.startswith(",nv"):
+        print("Getting Nevada Results")
+        split = message.content.split(' ')
+        argument = split[1:]
+        whole = ""
+        for part in argument:
+            whole += part + " "
+        argument = whole.strip()
+        if not argument:
+
+
 
 
 @client.event
