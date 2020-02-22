@@ -66,6 +66,7 @@ class DDHQ:
         return votes
 
     def get_national_totals(self):
+        ## DO NOT USE: CURRENTLY SUMS ALL ROUNDS OF ALL CAUCUSES, SO CAUCUS VOTES ARE COUNTED TWICE OR THRICE
         """
         :return: A dictionary of how many votes each candidate has nationally across all states
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
