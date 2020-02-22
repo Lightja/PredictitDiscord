@@ -404,8 +404,8 @@ async def my_background_task():
 
 async def poll_check():
     await client.wait_until_ready()
-    old1 = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
-    old2 = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+    old1 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+    old2 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
     while client.is_ready():
         print("checking results")
         changed = False
@@ -430,7 +430,7 @@ async def poll_check():
                     round(value / (results2['Total'] + 1) * 100, 2)) + "%\n"
             msg += '```\n'
             embed = discord.Embed(title="NV Second Alignment", description=msg, color=2206669)
-            await client.get_channel(671281289105768449).send(embed=embed)
+            await client.get_channel(680708890245202015).send(embed=embed)
         await asyncio.sleep(5)
 
 

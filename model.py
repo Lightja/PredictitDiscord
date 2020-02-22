@@ -4,7 +4,7 @@ from votes import AP, DDHQ, MergeResults
 class Model:
     def __init__(self, state, date, alignment):
         self.ap = AP(state, date, alignment)
-        self.ddhq = DDHQ(state)
+        self.ddhq = DDHQ(state, alignment)
 
     def merge(self):
         return MergeResults(self.ap.get_all_counties(), self.ddhq.get_all_counties())
