@@ -166,8 +166,9 @@ class DDHQ:
 class Edison:
     def __init__(self, url):
         self.url = url
-        #https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
-        
+        #exit polls: https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
+        #NV: https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B"electionDate"%3A"_2020"%2C"partyCode"%3A"D"%2C"stateCode"%3A"NV"%2C"raceTypeCode"%3A"P"%7D&extensions=%7B"persistedQuery"%3A%7B"version"%3A1%2C"sha256Hash"%3A"1b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097"%7D%7D
+        #NH: https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B%22electionDate%22%3A%22_2020%22%2C%22partyCode%22%3A%22D%22%2C%22stateCode%22%3A%22NH%22%2C%22raceTypeCode%22%3A%22P%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%221b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097%22%7D%7D
 
     def get_data(self):
         """
@@ -181,13 +182,27 @@ class Edison:
         :return: A dictionary of how many votes each candidate has in the state
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
         """
-        data = self.get_data()
+        county_results = self.get_all_counties()
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+        for county in county_results:
+            for candidate in county_results[county].keys():
+                if candidate in votes.keys(): votes[candidate] += county_results[county][candidate]
+        
         
         return votes
         
         
     def get_all_counties(self):
         county_results = {}
+        data = self.get_data()
+        counties = data['data']['mapCountyPrimariesResults']
+        for county in counties:
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+            for candidate in county['candidates']:
+                if candidate['lastName'] in votes.keys(): votes[candidate['lastName']] = candidate['voteNum']
+                votes['Total'] += candidate['voteNum']
+            county_results[county['countyName']] = votes
+        
         return county_results
 
     def get_all_precincts(self):
