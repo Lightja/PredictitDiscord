@@ -377,7 +377,7 @@ async def poll_check():
         changed = False
         results1 = nevada_first.merged_totals()
         results2 = nevada_second.merged_totals()
-        results3 = nevada_third.merged_totals()
+        results3 = nevada_third.ap.get_totals()
         if results1 != old1:
             old1 = results1
             print("new results1")
@@ -403,8 +403,9 @@ async def poll_check():
             print("new results2")
             msg = '```\n'
             for key, value in sorted(results3.items(), key=lambda x: -x[1]):
-                msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(
-                    round(value / (results3['Total'] + 1) * 100, 2)) + "%\n"
+                if key != "precinct_counted" and key != "precinct_total":
+                    msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(
+                        round(value / (results3['Total'] + 1) * 100, 2)) + "%\n"
             msg += '```\n'
             embed = discord.Embed(title="NV Final Delegates", description=msg, color=2206669)
             await client.get_channel(680708890245202015).send(embed=embed)

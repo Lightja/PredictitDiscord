@@ -349,6 +349,8 @@ class AP:
                     votes[candidate['last_name']] += candidate['votes_align1']
                 elif self.alignment == 2:
                     votes[candidate['last_name']] += candidate['votes_alignfinal']
+                else:
+                    votes[candidate['last_name']] += candidate['votes']
             except KeyError:
                 pass
             votes['Total'] += candidate['votes']
