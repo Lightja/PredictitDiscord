@@ -120,14 +120,16 @@ class DDHQ:
                 if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
                 elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
                 elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
-                        
-
+                    break
+            
 
         countydata = requests.get(countyurl).json()
         county_raw = countydata['results'][0]['counties']
@@ -154,8 +156,42 @@ class DDHQ:
                     votes['Bloomberg'] = county_raw[i]['votes'][cid]
                 votes['Total'] += county_raw[i]['votes'][cid]
             county_results[county_raw[i]['county'].lower()] = votes
+            
+        #FOR DEBUGGING, MAYBE ADD LATER:
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            'Bloomberg': 0, 'Total': 0}
+        for county in county_results:
+            #votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            #    'Bloomberg': 0, 'Total': 0}
+            for candidate in county_results[county].keys():
+                votes[candidate] += county_results[county][candidate]
+        county_results['Total'] = votes
+        #"""
 
         return county_results
+        
+    def get_race_url(self):
+        data = self.get_data()
+        races = data['results']
+        countyurl = 'County data not found.'
+        # Identify which race matches the passed in state:
+        for i in range(0, len(races)):
+            if ((races[i]['state'].lower() == self.state.lower() or races[i][
+                'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
+                'office'] == 'president'):
+                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+        return countyurl
 
     def get_all_precincts(self):
         precinct_results = {}
@@ -170,12 +206,15 @@ class DDHQ:
                 if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
                 elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
                 elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
                     countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
                         'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
 
         countydata = requests.get(countyurl).json()
         precinct_raw = countydata['results'][0]['vcus']['counties']
@@ -259,7 +298,9 @@ class Edison:
                 if candidate['lastName'] in votes.keys(): votes[candidate['lastName']] = candidate['voteNum']
                 votes['Total'] += candidate['voteNum']
             county_results[county['countyName']] = votes
-
+        
+        
+        
         return county_results
 
     def get_all_precincts(self):
@@ -319,6 +360,7 @@ class AP:
         county_results = {}
         data = self.get_data()
         county_raw = data['data']['races'][0]['counties']
+        results = "results"
         for place in county_raw:
             votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
                      'Bloomberg': 0, 'Total': 0}
@@ -332,6 +374,17 @@ class AP:
                         votes[key] = num
                 votes['Total'] += num
             county_results[place['name'].lower()] = votes
+            
+        #FOR DEBUGGING, MAYBE ADD LATER:
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            'Bloomberg': 0, 'Total': 0}
+        for county in county_results:
+            #votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            #    'Bloomberg': 0, 'Total': 0}
+            for candidate in county_results[county].keys():
+                votes[candidate] += county_results[county][candidate]
+        county_results['Total'] = votes
+        #"""
         return county_results
 
     def get_county(self, county_name):
@@ -409,3 +462,26 @@ def DDHQResultsVotes():
     for candidate in results:
         votes['Total'] += results[candidate]
     return votes
+
+
+print(" ")
+print(" ")
+print(" ")
+
+nv_ap = AP("nevada", "02-22", 2)
+nv_ddhq = DDHQ("NV",2)
+#print(nv_ap.get_totals())
+#print(nv_ddhq.get_totals())
+#print(nv_ddhq.get_all_counties())
+print(nv_ap.get_all_counties())
+print(" ")
+print(" ")
+print(nv_ddhq.get_race_url())
+print(nv_ddhq.get_all_counties())
+print(" ")
+print(" ")
+print(MergeResults(nv_ddhq.get_all_counties(),nv_ap.get_all_counties()))
+
+
+#=======
+# 882a16b65bf830df6ca84f77b5cbdf39fbada09d
