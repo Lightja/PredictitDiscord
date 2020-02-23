@@ -10,7 +10,8 @@ from model import Model
 api = main.Api()
 client = discord.Client()
 stats = {'users': {}, 'commands': {}}
-nevada = Model("Nevada")
+nevada_first = Model("nevada", "02-22", 1)
+nevada_second = Model("nevada", "02-22", 2)
 
 
 @client.event
@@ -288,63 +289,8 @@ async def on_message(message):
             msg += command + ": " + str(num) + '\n'
         embed = discord.Embed(title="command stats", description=msg, color=2206669)
         await message.channel.send(embed=embed)
-    elif message.content.startswith(",ps") and str(message.author.id) == "324063771339259904":
-        argument = message.content.split(';')
-        try:
-            market = int(argument[1].strip())
-        except ValueError:
-            market = api.get_market_id(argument[1].strip())
-        bin = argument[2].strip()
-        num = argument[3].strip()
-        price = argument[4].strip()
-        long = False
-        print(market, bin, num, price, long)
-        made, name = api.make_trade_bin(market, bin, num, price, long)
-        if made:
-            msg = "Placed order for " + str(num) + " short of " + name + " @" + str(price) + "¢"
-        else:
-            msg = "Unable to place order"
-        await message.channel.send(msg)
-    elif message.content.startswith(",pl") and str(message.author.id) == "324063771339259904":
-        argument = message.content.split(';')
-        try:
-            market = int(argument[1].strip())
-        except ValueError:
-            market = api.get_market_id(argument[1].strip())
-        bin = argument[2].strip()
-        num = argument[3].strip()
-        price = argument[4].strip()
-        long = True
-        print(market, bin, num, price, long)
-        made, name = api.make_trade_bin(market, bin, num, price, long)
-        if made:
-            msg = "Placed order for " + str(num) + " long of " + name + " for " + str(price) + "¢"
-        else:
-            msg = "Unable to place order"
-        await message.channel.send(msg)
-    elif message.content.startswith(",pr") and str(message.author.id) == "324063771339259904":
-        argument = message.content.split(' ')
-        try:
-            market = int(argument[1].strip())
-        except ValueError:
-            market = api.get_market_id(argument[1].strip())
-        max_num = int(argument[2].strip())
-        bins = api.get_all_offers(market)
-        short = api.get_all_short(bins)
-        spread, risk = main.optimize_spread(short, max_num, True)
-        print(spread)
-        print(short)
-        traded, made = api.purchase_spread(market, spread, short)
-        failed = 0
-        for work in traded:
-            if not work:
-                failed += 1
-        msg = "Purchased optimal spread for market " + str(market) + " and made $" + str(made) + "\n"
-        if failed:
-            msg += "Failed to purchase " + str(failed) + " bins"
-        await message.channel.send(msg)
-    elif message.content.startswith(",nv"):
-        print("Getting Nevada Results")
+    elif message.content.startswith(",nv2"):
+        print("Getting Nevada Second Results")
         split = message.content.split(' ')
         argument = split[1:]
         whole = ""
@@ -352,9 +298,33 @@ async def on_message(message):
             whole += part + " "
         argument = whole.strip()
         if not argument:
-
-
-
+            results = nevada_second.merged_totals()
+        else:
+            results = nevada_second.best_county(argument)
+        msg = '```\n'
+        for key, value in sorted(results.items(), key=lambda x:- x[1]):
+            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total']+1)*100, 2)) + "%\n"
+        msg += '```\n'
+        embed = discord.Embed(title="NV Second Alignment", description=msg, color=2206669)
+        await message.channel.send(embed=embed)
+    elif message.content.startswith(",nv") or message.content.startswith(",nv1"):
+        print("Getting Nevada First Results")
+        split = message.content.split(' ')
+        argument = split[1:]
+        whole = ""
+        for part in argument:
+            whole += part + " "
+        argument = whole.strip()
+        if not argument:
+            results = nevada_first.merged_totals()
+        else:
+            results = nevada_first.best_county(argument)
+        msg = '```\n'
+        for key, value in sorted(results.items(), key=lambda x: -x[1]):
+            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total']+1)*100, 2)) + "%\n"
+        msg += '```\n'
+        embed = discord.Embed(title="NV First Alignment", description=msg, color=2206669)
+        await message.channel.send(embed=embed)
 
 @client.event
 async def on_ready():
@@ -379,46 +349,36 @@ async def my_background_task():
 
 async def poll_check():
     await client.wait_until_ready()
-    old = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
-    results = requests.get(
-        "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
-    candidate_results = results['data']['races'][0]['candidates']
-    for candidate in candidate_results:
-        try:
-            old[candidate['last_name']] += candidate['votes']
-        except KeyError:
-            pass
-    print(old)
+    old1 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+    old2 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
     while client.is_ready():
+        print("checking results")
         changed = False
-        results = requests.get(
-            "https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json").json()
-        candidate_results = results['data']['races'][0]['candidates']
-        for candidate in candidate_results:
-            try:
-                if candidate['votes'] != old[candidate['last_name']]:
-                    changed = True
-                    old[candidate['last_name']] = candidate['votes']
-            except KeyError:
-                pass
-        print(old)
-        if changed:
-            title = "NH Results Changed"
-            msg = "```"
-            for candidate in candidate_results:
-                if candidate['last_name'] in old.keys():
-                    msg += candidate['last_name'] + "  " + ' ' * (9 - len(candidate['last_name'])) + str(
-                        candidate['votes']) + ' ' * (5 - len(str(candidate['votes']))) + "  " + candidate[
-                               'percent_display'] + "%\n"
-            msg += str(results['data']['races'][0]['precincts_reporting']) + "/" + str(results['data']['races'][0]['precincts_total']) + " reporting\n"
-            msg += "```"
-            print("NH Update")
-            embed = discord.Embed(title=title, description=msg, color=2206669,
-                                  url="https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+        results1 = nevada_first.merged_totals()
+        results2 = nevada_second.merged_totals()
+        if results1 != old1:
+            old1 = results1
+            print("new results1")
+            msg = '```\n'
+            for key, value in sorted(results1.items(), key=lambda x: -x[1]):
+                msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(
+                    round(value / (results1['Total'] + 1) * 100, 2)) + "%\n"
+            msg += '```\n'
+            embed = discord.Embed(title="NV First Alignment", description=msg, color=2206669)
             await client.get_channel(671281289105768449).send(embed=embed)
+        if results2 != old2:
+            old2 = results2
+            print("new results2")
+            msg = '```\n'
+            for key, value in sorted(results2.items(), key=lambda x: -x[1]):
+                msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(
+                    round(value / (results2['Total'] + 1) * 100, 2)) + "%\n"
+            msg += '```\n'
+            embed = discord.Embed(title="NV Second Alignment", description=msg, color=2206669)
+            await client.get_channel(680708890245202015).send(embed=embed)
         await asyncio.sleep(5)
 
 
 client.loop.create_task(my_background_task())
-# client.loop.create_task(poll_check())
+client.loop.create_task(poll_check())
 client.run(auths.discord_token)
