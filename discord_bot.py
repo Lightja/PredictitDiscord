@@ -12,6 +12,7 @@ client = discord.Client()
 stats = {'users': {}, 'commands': {}}
 nevada_first = Model("nevada", "02-22", 1)
 nevada_second = Model("nevada", "02-22", 2)
+nevada_third = Model("nevada", "02-22", 3)
 
 
 @client.event
@@ -303,9 +304,27 @@ async def on_message(message):
             results = nevada_second.best_county(argument)
         msg = '```\n'
         for key, value in sorted(results.items(), key=lambda x:- x[1]):
-            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total']+1)*100, 2)) + "%\n"
+            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total'])*100, 2)) + "%\n"
         msg += '```\n'
         embed = discord.Embed(title="NV Second Alignment", description=msg, color=2206669)
+        await message.channel.send(embed=embed)
+    elif message.content.startswith(",nv3"):
+        print("Getting Nevada Final Results")
+        split = message.content.split(' ')
+        argument = split[1:]
+        whole = ""
+        for part in argument:
+            whole += part + " "
+        argument = whole.strip()
+        if not argument:
+            results = nevada_third.merged_totals()
+        else:
+            results = nevada_third.best_county(argument)
+        msg = '```\n'
+        for key, value in sorted(results.items(), key=lambda x:- x[1]):
+            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total'])*100, 2)) + "%\n"
+        msg += '```\n'
+        embed = discord.Embed(title="NV Final Delegates", description=msg, color=2206669)
         await message.channel.send(embed=embed)
     elif message.content.startswith(",nv") or message.content.startswith(",nv1"):
         print("Getting Nevada First Results")
@@ -321,7 +340,7 @@ async def on_message(message):
             results = nevada_first.best_county(argument)
         msg = '```\n'
         for key, value in sorted(results.items(), key=lambda x: -x[1]):
-            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total']+1)*100, 2)) + "%\n"
+            msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(round(value/(results['Total'])*100, 2)) + "%\n"
         msg += '```\n'
         embed = discord.Embed(title="NV First Alignment", description=msg, color=2206669)
         await message.channel.send(embed=embed)
@@ -351,11 +370,14 @@ async def poll_check():
     await client.wait_until_ready()
     old1 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
     old2 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0, 'Bloomberg': 0, 'Total': 0}
+    old3 = {'Klobuchar': 1, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            'Bloomberg': 0, 'Total': 0}
     while client.is_ready():
         print("checking results")
         changed = False
         results1 = nevada_first.merged_totals()
         results2 = nevada_second.merged_totals()
+        results3 = nevada_third.merged_totals()
         if results1 != old1:
             old1 = results1
             print("new results1")
@@ -375,6 +397,16 @@ async def poll_check():
                     round(value / (results2['Total'] + 1) * 100, 2)) + "%\n"
             msg += '```\n'
             embed = discord.Embed(title="NV Second Alignment", description=msg, color=2206669)
+            await client.get_channel(680708890245202015).send(embed=embed)
+        if results3 != old3:
+            old3 = results3
+            print("new results2")
+            msg = '```\n'
+            for key, value in sorted(results3.items(), key=lambda x: -x[1]):
+                msg += key + " " * (11 - len(key)) + str(value) + " " * (7 - len(str(value))) + str(
+                    round(value / (results3['Total'] + 1) * 100, 2)) + "%\n"
+            msg += '```\n'
+            embed = discord.Embed(title="NV Final Delegates", description=msg, color=2206669)
             await client.get_channel(680708890245202015).send(embed=embed)
         await asyncio.sleep(5)
 
