@@ -424,16 +424,23 @@ def DDHQResultsVotes():
         votes['Total'] += results[candidate]
     return votes
 
-
-nh = DDHQ("nh")
-# print(nh.get_totals())
-print("DDHQ TOTALS:")
+"""
+ia1 = DDHQ("ia",1)
+ia2 = DDHQ("ia",2)
+nh = DDHQ("nh",3)
+#print("DDHQ TOTALS:")
+print(ia1.get_totals())
+print(ia2.get_totals())
 print(nh.get_totals())
 # print(len(nh.get_all_precincts()))
 
+#cnn = Edison("https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B%22electionDate%22%3A%22_2020%22%2C%22partyCode%22%3A%22D%22%2C%22stateCode%22%3A%22NH%22%2C%22raceTypeCode%22%3A%22P%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%221b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097%22%7D%7D")
+#print(cnn.get_totals())
+
 ##test
 ##test
-nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
-print(nyt.get_all_precincts())
-print(nyt.get_precinct('acworth'))
-print(nyt.get_totals())
+#nyt = AP("https://int.nyt.com/applications/elections/2020/data/api/2020-02-11/new-hampshire/president/democrat.json")
+#print(nyt.get_all_precincts())
+#print(nyt.get_precinct('acworth'))
+#print(nyt.get_totals())
+"""
