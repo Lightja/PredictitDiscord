@@ -286,8 +286,9 @@ class Edison:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
                  'Bloomberg': 0, 'Total': 0}
         for county in county_results:
-            for candidate in county_results[county].keys():
-                if candidate in votes.keys(): votes[candidate] += county_results[county][candidate]
+            if county != 'Total':
+                for candidate in county_results[county].keys():
+                    if candidate in votes.keys(): votes[candidate] += county_results[county][candidate]
 
         return votes
 
@@ -538,7 +539,7 @@ print(" ")
 
 
 nv_edison = Edison("NH")
-nv_ap = AP("new-hampshire", 1)
+nv_ap = AP("new-hampshire", 3)
 nv_ddhq = DDHQ("NH",1)
 print(nv_edison.get_totals())
 print(nv_ap.get_totals())
