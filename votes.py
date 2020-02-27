@@ -306,10 +306,6 @@ class AP:
         self.alignment = alignment
         self.state = state
         self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(self.get_date(), state)
-<<<<<<< HEAD
-        
-=======
->>>>>>> cd8a324a9babb8dbae4ef57fb3c2a86a323ca0c8
 
     def get_date(self):
         schedule = {'iowa': '02-03',
@@ -503,7 +499,7 @@ print(" ")
 
 
 nv_edison = Edison("NH")
-nv_ap = AP("new-hampshire", 1)
+nv_ap = AP("new-hampshire", 0)
 nv_ddhq = DDHQ("NH",1)
 
 #print(nv_edison.get_all_counties())
