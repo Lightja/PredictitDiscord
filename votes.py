@@ -66,7 +66,6 @@ class DDHQ:
         return votes
 
     def get_national_totals(self):
-        ## DO NOT USE: CURRENTLY SUMS ALL ROUNDS OF ALL CAUCUSES, SO CAUCUS VOTES ARE COUNTED TWICE OR THRICE
         """
         :return: A dictionary of how many votes each candidate has nationally across all states
         {"sanders": 1234, "biden":1200, ..., "precinct_total": 400, "precinct_counted": 132, etc}
@@ -76,11 +75,12 @@ class DDHQ:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
                  'Bloomberg': 0, 'Total': 0}
         for i in range(0, len(races)):
-            candidates = races[i]['candidates']
-            for i in range(0, len(candidates)):
-                votes['Total'] += candidates[i]['votes']
-                if candidates[i]['lastName'] in votes.keys():
-                    votes[candidates[i]['lastName']] += candidates[i]['votes']
+            if races[i]['electionType'].lower() == "primary" or races[i]['electionType'].lower() == "caucus_round_2":
+                candidates = races[i]['candidates']
+                for i in range(0, len(candidates)):
+                    votes['Total'] += candidates[i]['votes']
+                    if candidates[i]['lastName'] in votes.keys():
+                        votes[candidates[i]['lastName']] += candidates[i]['votes']
         return votes
 
     def get_totals_sum(self, states):
@@ -98,7 +98,7 @@ class DDHQ:
         for state in states:
             state = state.lower()
         for i in range(0, len(races)):
-            if (races[i]['state'].lower() in states or races[i]['stateAbbr'].lower() in states):
+            if (races[i]['state'].lower() in states or races[i]['stateAbbr'].lower() in states) and races[i]['electionType'].lower() == "primary" or races[i]['electionType'].lower() == "caucus_round_2":
                 candidates = races[i]['candidates']
                 for i in range(0, len(candidates)):
                     votes['Total'] += candidates[i]['votes']
@@ -260,8 +260,12 @@ class DDHQ:
 
 
 class Edison:
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, state):
+        #self.url = "https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B\"electionDate\"%3A\"_2020\"%2C\"partyCode\"%3A\"D\"%2C\"stateCode\"%3A\"" + state + "\"%2C\"raceTypeCode\"%3A\"P\"%7D&extensions=%7B\"persistedQuery\"%3A%7B\"version\"%3A1%2C\"sha256Hash\"%3A\"1b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097\"%7D%7D\""
+        
+        self.url = "https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B%22electionDate%22%3A%22_2020%22%2C%22partyCode%22%3A%22D%22%2C%22stateCode%22%3A%22" + state + "%22%2C%22raceTypeCode%22%3A%22P%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%221b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097%22%7D%7D"
+        
+        
         # exit polls: https://politics-elex.data.api.cnn.io/graphql?operationName=ExitPolls&variables=%7B%22stateCode%22%3A%22NH%22%2C%22partyCode%22%3A%22D%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b9de6c88cd0fec6fa431e775cfb1be75182bc6323ba8a0182d4dcf4e319a827b%22%7D%7D
         # NV: https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B"electionDate"%3A"_2020"%2C"partyCode"%3A"D"%2C"stateCode"%3A"NV"%2C"raceTypeCode"%3A"P"%7D&extensions=%7B"persistedQuery"%3A%7B"version"%3A1%2C"sha256Hash"%3A"1b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097"%7D%7D
         # NH: https://politics-elex.data.api.cnn.io/graphql?operationName=AllCountyRaces&variables=%7B%22electionDate%22%3A%22_2020%22%2C%22partyCode%22%3A%22D%22%2C%22stateCode%22%3A%22NH%22%2C%22raceTypeCode%22%3A%22P%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%221b4b82c69d45307f7406e49751ea10185dce2798d08649764d69c240df529097%22%7D%7D
@@ -297,7 +301,16 @@ class Edison:
             for candidate in county['candidates']:
                 if candidate['lastName'] in votes.keys(): votes[candidate['lastName']] = candidate['voteNum']
                 votes['Total'] += candidate['voteNum']
-            county_results[county['countyName']] = votes
+            county_results[county['countyName'].lower()] = votes
+            
+        #GET TOTALS:
+        votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            'Bloomberg': 0, 'Total': 0}
+        for county in county_results:
+            for candidate in county_results[county].keys():
+                votes[candidate] += county_results[county][candidate]
+        county_results['Total'] = votes
+        #"""
         
         
         
@@ -323,10 +336,72 @@ class Edison:
 
 
 class AP:
-    def __init__(self, state, date, alignment):
+    def __init__(self, state, alignment):
+        self.alignment = alignment
+        self.state = state
+        self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(self.get_date(), state)
+        
+    
+    def __init__(self, state, alignment):
         self.alignment = alignment
         self.state = state
         self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(date, state)
+
+    def get_date(self):
+        schedule = {'iowa': '02-03',
+                    'new-hampshire': '02-11',
+                    'nevada':'02-22',
+                    'south-carolina':'02-29',
+                    'alabama':'03-03',
+                    'american-samoa':'03-03',
+                    'arkansas':'03-03',
+                    'california':'03-03',
+                    'colorado':'03-03',
+                    'democrats-abroad':'03-03',
+                    'maine':'03-03',
+                    'massachusetts':'03-03',
+                    'minnesota':'03-03',
+                    'north-carolina':'03-03',
+                    'oklahoma':'03-03',
+                    'tennessee':'03-03',
+                    'texas':'03-03',
+                    'utah':'03-03',
+                    'vermont':'03-03',
+                    'virginia':'03-03',
+                    'idaho':'03-10',
+                    'michigan':'03-10',
+                    'mississippi':'03-10',
+                    'missouri':'03-10',
+                    'washington':'03-10',
+                    'arizona':'03-17',
+                    'florida':'03-17',
+                    'georgia':'03-24',
+                    'puerto-rico':'03-29',
+                    'alaska':'04-04',
+                    'hawaii':'04-04',
+                    'louisiana':'04-04',
+                    'wyoming':'04-04',
+                    'wisconsin':'04-07',
+                    'connecticut':'04-28',
+                    'delaware':'04-28',
+                    'maryland':'04-28',
+                    'new-york':'04-28',
+                    'pennsylvania':'04-28',
+                    'rhode-island':'04-28',
+                    'guam':'05-02',
+                    'kansas':'05-02',
+                    'indiana':'05-05',
+                    'nebraska':'05-12',
+                    'west-virginia':'05-12',
+                    'kentucky':'05-19',
+                    'oregon':'05-19',
+                    'district-of-columbia':'06-02',
+                    'montana':'06-02',
+                    'new-jersey':'06-02',
+                    'new-mexico':'06-02',
+                    'south-dakota':'06-02',
+                    'virgin-islands':'06-07',}
+        return schedule[self.state]
 
     def get_data(self):
         """
@@ -377,12 +452,10 @@ class AP:
                 votes['Total'] += num
             county_results[place['name'].lower()] = votes
             
-        #FOR DEBUGGING, MAYBE ADD LATER:
+        #GET TOTALS:
         votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
             'Bloomberg': 0, 'Total': 0}
         for county in county_results:
-            #votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
-            #    'Bloomberg': 0, 'Total': 0}
             for candidate in county_results[county].keys():
                 votes[candidate] += county_results[county][candidate]
         county_results['Total'] = votes
@@ -467,22 +540,20 @@ def DDHQResultsVotes():
 
 
 print(" ")
+
+
+nv_edison = Edison("NH")
+nv_ap = AP("new-hampshire", 1)
+nv_ddhq = DDHQ("NH",1)
+print(nv_edison.get_totals())
+print(nv_ap.get_totals())
+print(nv_ddhq.get_totals())
+
 print(" ")
 print(" ")
 
-nv_ap = AP("nevada", "02-22", 2)
-nv_ddhq = DDHQ("NV",2)
-#print(nv_ap.get_totals())
-#print(nv_ddhq.get_totals())
-#print(nv_ddhq.get_all_counties())
-print(nv_ap.get_all_counties())
-print(" ")
-print(" ")
-print(nv_ddhq.get_race_url())
-print(nv_ddhq.get_all_counties())
-print(" ")
-print(" ")
-print(MergeResults(nv_ddhq.get_all_counties(),nv_ap.get_all_counties()))
+print(MergeResults(nv_edison.get_all_counties(),nv_ddhq.get_all_counties())['Total'])
+
 
 
 #=======
