@@ -494,6 +494,13 @@ def MergeResults(APres, DDHQres):
             mergedData['Total']['Bloomberg'] += mergedData[precinct]['Bloomberg']
             mergedData['Total']['Total'] += mergedData[precinct]['Total']
     return mergedData
+    
+def MergeAllResults(data):
+    mergedData = data[0]
+    for i in range(1,len(data)):
+        mergedData = MergeResults(mergedData, data[i])
+    return mergedData
+        
 
 
 
@@ -521,7 +528,16 @@ print(nv_ddhq.get_totals())
 print(" ")
 print(" ")
 
-print(MergeResults(nv_edison.get_all_counties(),nv_ap.get_all_precincts())['Total'])
+data = {}
+data[0] = nv_edison.get_all_counties()
+data[1] = nv_ap.get_all_precincts()
+data[2] = nv_ddhq.get_all_precincts()
+
+mergedData = MergeAllResults(data)
+
+print(mergedData['Total'])
+
+#print(MergeResults(nv_edison.get_all_counties(),nv_ap.get_all_precincts())['Total'])
 
 #edison_data = nv_edison.get_all_counties()
 #for county in edison_data.keys():
