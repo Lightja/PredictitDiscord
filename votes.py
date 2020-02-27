@@ -341,11 +341,6 @@ class AP:
         self.state = state
         self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(self.get_date(), state)
         
-    
-    def __init__(self, state, alignment):
-        self.alignment = alignment
-        self.state = state
-        self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(date, state)
 
     def get_date(self):
         schedule = {'iowa': '02-03',
