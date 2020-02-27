@@ -336,10 +336,72 @@ class Edison:
 
 
 class AP:
-    def __init__(self, state, date, alignment):
+    def __init__(self, state, alignment):
+        self.alignment = alignment
+        self.state = state
+        self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(self.get_date(), state)
+        
+    
+    def __init__(self, state, alignment):
         self.alignment = alignment
         self.state = state
         self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(date, state)
+
+    def get_date(self):
+        schedule = {'iowa': '02-03',
+                    'new-hampshire': '02-11',
+                    'nevada':'02-22',
+                    'south-carolina':'02-29',
+                    'alabama':'03-03',
+                    'american-samoa':'03-03',
+                    'arkansas':'03-03',
+                    'california':'03-03',
+                    'colorado':'03-03',
+                    'democrats-abroad':'03-03',
+                    'maine':'03-03',
+                    'massachusetts':'03-03',
+                    'minnesota':'03-03',
+                    'north-carolina':'03-03',
+                    'oklahoma':'03-03',
+                    'tennessee':'03-03',
+                    'texas':'03-03',
+                    'utah':'03-03',
+                    'vermont':'03-03',
+                    'virginia':'03-03',
+                    'idaho':'03-10',
+                    'michigan':'03-10',
+                    'mississippi':'03-10',
+                    'missouri':'03-10',
+                    'washington':'03-10',
+                    'arizona':'03-17',
+                    'florida':'03-17',
+                    'georgia':'03-24',
+                    'puerto-rico':'03-29',
+                    'alaska':'04-04',
+                    'hawaii':'04-04',
+                    'louisiana':'04-04',
+                    'wyoming':'04-04',
+                    'wisconsin':'04-07',
+                    'connecticut':'04-28',
+                    'delaware':'04-28',
+                    'maryland':'04-28',
+                    'new-york':'04-28',
+                    'pennsylvania':'04-28',
+                    'rhode-island':'04-28',
+                    'guam':'05-02',
+                    'kansas':'05-02',
+                    'indiana':'05-05',
+                    'nebraska':'05-12',
+                    'west-virginia':'05-12',
+                    'kentucky':'05-19',
+                    'oregon':'05-19',
+                    'district-of-columbia':'06-02',
+                    'montana':'06-02',
+                    'new-jersey':'06-02',
+                    'new-mexico':'06-02',
+                    'south-dakota':'06-02',
+                    'virgin-islands':'06-07',}
+        return schedule[self.state]
 
     def get_data(self):
         """
@@ -478,17 +540,19 @@ def DDHQResultsVotes():
 
 
 print(" ")
+
+
+nv_edison = Edison("NH")
+nv_ap = AP("new-hampshire", 1)
+nv_ddhq = DDHQ("NH",1)
+print(nv_edison.get_totals())
+print(nv_ap.get_totals())
+print(nv_ddhq.get_totals())
+
 print(" ")
 print(" ")
 
-
-nv_edison = Edison("NV")
-nv_ap = AP("nevada", "02-22", 3)
-nv_ddhq = DDHQ("NV",3)
-print(nv_edison.get_all_counties())
-print(nv_ap.get_all_counties())
-print(nv_ddhq.get_all_counties())
-print(nv_ddhq.get_race_url())
+print(MergeResults(nv_edison.get_all_counties(),nv_ddhq.get_all_counties())['Total'])
 
 
 
