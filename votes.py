@@ -479,26 +479,6 @@ def MergeResults(APres, DDHQres):
     return mergedData
 
 
-def DDHQResultsVotes():
-    """
-        :return: A dictionary of how many votes each candidate has from DDHQ's API, 
-        {"sanders":100, "biden":20, ..., "total": 200}
-        currently set to NH URL API
-        """
-    data = requests.get(
-        "https://results.decisiondeskhq.com/api/v1/results/?limit=1&election=1ee05d83-2d5b-48ad-8c07-dfd6f63344be&electionType=primary").json()
-
-    results = data['results'][0]['votes']
-    try:
-        votes = {'Klobuchar': results['8233'], 'Sanders': results['8'], 'Warren': results['8284'],
-                 'Yang': results['11920'], 'Steyer': results['11921'], 'Biden': results['11918'],
-                 'Buttigieg': results['11919'], 'Bloomberg': results['11954'], 'Total': 0}
-    except KeyError:
-        pass
-    for candidate in results:
-        votes['Total'] += results[candidate]
-    return votes
-
 
 print(" ")
 
