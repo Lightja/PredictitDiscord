@@ -434,11 +434,13 @@ class AP:
         data = self.get_data()
         town_results = data['data']['races'][0]['townships']
         for place in town_results:
-            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0,
+            'Bloomberg': 0, 'Total': 0}
             for name, num in place['results'].items():
                 for key in votes.keys():
                     if key.lower() in name:
                         votes[key] = num
+                votes['Total'] += num
             precinct_results[place['name'].lower()] = votes
         return precinct_results
     
@@ -466,7 +468,7 @@ def MergeResults(APres, DDHQres):
         else:
             mergedData[precinct] = DDHQres[precinct]
 
-    # identify differing precincts:
+    #FOR DEBUGGING: identify differing precincts:
     """
     for precinct in APres.keys():
         if precinct in mergedData:
@@ -519,7 +521,7 @@ print(nv_ddhq.get_totals())
 print(" ")
 print(" ")
 
-print(MergeResults(nv_edison.get_all_counties(),nv_ddhq.get_all_precincts())['Total'])
+print(MergeResults(nv_edison.get_all_counties(),nv_ap.get_all_precincts())['Total'])
 
 #edison_data = nv_edison.get_all_counties()
 #for county in edison_data.keys():
