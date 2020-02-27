@@ -24,6 +24,29 @@ class DDHQ:
         :return: A dictionary of the raw vote data from DDHQ
         """
         return requests.get(url=self.url).json()
+        
+    def get_race_url(self):
+        data = self.get_data()
+        races = data['results']
+        countyurl = 'County data not found.'
+        # Identify which race matches the passed in state:
+        for i in range(0, len(races)):
+            if ((races[i]['state'].lower() == self.state.lower() or races[i][
+                'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
+                'office'] == 'president'):
+                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
+                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
+                        'id'] + "&electionType=primary&limit=1&offset=0"
+                    break
+        return countyurl
 
     def get_totals(self):
         """
@@ -110,25 +133,7 @@ class DDHQ:
         county_results = {}
         data = self.get_data()
         races = data['results']
-        countyurl = 'County data not found.'
-        # Identify which race matches the passed in state:
-        
-        for i in range(0, len(races)):
-            if ((races[i]['state'].lower() == self.state.lower() or races[i][
-                'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
-                'office'] == 'president'):
-                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
+        countyurl = self.get_race_url()
             
 
         countydata = requests.get(countyurl).json()
@@ -169,52 +174,12 @@ class DDHQ:
         #"""
 
         return county_results
-        
-    def get_race_url(self):
-        data = self.get_data()
-        races = data['results']
-        countyurl = 'County data not found.'
-        # Identify which race matches the passed in state:
-        for i in range(0, len(races)):
-            if ((races[i]['state'].lower() == self.state.lower() or races[i][
-                'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
-                'office'] == 'president'):
-                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-        return countyurl
 
     def get_all_precincts(self):
         precinct_results = {}
         data = self.get_data()
         races = data['results']
-        countyurl = 'County data not found.'
-        # Identify which race matches the passed in state:
-        for i in range(0, len(races)):
-            if ((races[i]['state'].lower() == self.state.lower() or races[i][
-                'stateAbbr'].lower() == self.state.lower()) and races[i]['party'] == 'Democratic' and races[i][
-                'office'] == 'president'):
-                if races[i]['electionType'] == 'caucus_round_1' and self.alignment == 1:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus_round_2' and self.alignment == 2:
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
-                elif races[i]['electionType'] == 'caucus' or races[i]['electionType'] == 'primary':
-                    countyurl = "https://results.decisiondeskhq.com/api/v1/results/?election=" + races[i][
-                        'id'] + "&electionType=primary&limit=1&offset=0"
-                    break
+        countyurl = self.get_race_url()
 
         countydata = requests.get(countyurl).json()
         precinct_raw = countydata['results'][0]['vcus']['counties']
@@ -539,8 +504,19 @@ print(" ")
 
 
 nv_edison = Edison("NH")
-nv_ap = AP("new-hampshire", 3)
+nv_ap = AP("new-hampshire", 1)
 nv_ddhq = DDHQ("NH",1)
+
+#print(nv_edison.get_all_counties())
+#print('~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=')
+#print('~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=')
+#print(nv_ap.get_all_counties())
+#print('~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=')
+#print('~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=')
+#print(nv_ddhq.get_all_counties())
+#print(nv_ddhq.get_race_url())
+
+
 print(nv_edison.get_totals())
 print(nv_ap.get_totals())
 print(nv_ddhq.get_totals())
@@ -548,7 +524,12 @@ print(nv_ddhq.get_totals())
 print(" ")
 print(" ")
 
-print(MergeResults(nv_edison.get_all_counties(),nv_ddhq.get_all_counties())['Total'])
+print(MergeResults(nv_edison.get_all_counties(),nv_ddhq.get_all_precincts())['Total'])
+
+#edison_data = nv_edison.get_all_counties()
+#for county in edison_data.keys():
+#    print(county)
+    
 
 
 
