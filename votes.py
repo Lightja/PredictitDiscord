@@ -306,7 +306,10 @@ class AP:
         self.alignment = alignment
         self.state = state
         self.url = "https://int.nyt.com/applications/elections/2020/data/api/2020-{}/{}/president/democrat.json".format(self.get_date(), state)
+<<<<<<< HEAD
         
+=======
+>>>>>>> cd8a324a9babb8dbae4ef57fb3c2a86a323ca0c8
 
     def get_date(self):
         schedule = {'iowa': '02-03',
@@ -430,7 +433,23 @@ class AP:
         """
         return self.get_all_counties()[county_name.lower()]
 
-
+    def get_all_precincts(self):
+        precinct_results = {}
+        data = self.get_data()
+        town_results = data['data']['races'][0]['townships']
+        for place in town_results:
+            votes = {'Klobuchar': 0, 'Sanders': 0, 'Warren': 0, 'Yang': 0, 'Steyer': 0, 'Biden': 0, 'Buttigieg': 0}
+            for name, num in place['results'].items():
+                for key in votes.keys():
+                    if key.lower() in name:
+                        votes[key] = num
+            precinct_results[place['name'].lower()] = votes
+        return precinct_results
+    
+    def get_precinct(self, precinct_name):
+        return self.get_all_precincts()[precinct_name.lower()]
+    
+    
 def MergeResults(APres, DDHQres):
     mergedData = {}
 
